@@ -11,17 +11,26 @@
 #include <unistd.h>
 #include <limits.h>
 
+const char* get_os_type() {
+    #ifdef __APPLE__
+        return "macOS";
+    #else
+        return "Linux";
+    #endif
+}
+
 void restart_terminal_new_session() {
     const char* os_type = get_os_type();
-    printf("Restarting terminal with a new session...\n");
 
-    if (strcmp(os_type, "macOS") == 0) {
-        // Для macOS
-        system("open -a Terminal");
+    if ( strcmp( os_type, "macOS" ) == 0) {
+        // macOS
+        system( "open -a Terminal" );
     } else {
-        // Для Linux (GNOME Terminal)
-        system("gnome-terminal -- bash -c 'exec bash'");
+        // Linux (GNOME Terminal)
+        system( "gnome-terminal -- bash -c 'exec bash'" );
     }
+
+    printf( "New session started...\n" );
 }
 
 void restart_terminal_current_directory() {
@@ -32,8 +41,6 @@ void restart_terminal_current_directory() {
         perror( "Can't get current directory" );
         return;
     }
-
-    printf( "Restarting terminal in the current directory: %s\n", cwd );
 
     if ( strcmp( os_type, "macOS" ) == 0 ) {
         // macOS
@@ -46,6 +53,8 @@ void restart_terminal_current_directory() {
         snprintf( command, sizeof( command ), "gnome-terminal -- bash -c 'cd %s; exec bash'", cwd );
         system( command );
     }
+
+    printf( "New session started in current directory\n" );
 }
 
 long calculate_directory_size( const char* path ) {
@@ -55,7 +64,7 @@ long calculate_directory_size( const char* path ) {
     long total_size = 0;
 
     if (( dir = opendir( path )) == NULL ) {
-        perror("Can't find path");
+        perror( "Can't find path" );
         return -1;
     }
 
@@ -150,6 +159,7 @@ void print_file_contents( const char* filepath ) {
     fclose( file );
 }
 
+
 int main( int argc, char* argv[] ) {
 
     if ( argc != 2) {
@@ -158,8 +168,8 @@ int main( int argc, char* argv[] ) {
                     "  cache - to see the terminal cache size and clean it\n"
                     "  about - to see the information about your zsh\n"
                     "  history - to see the command history of your terminal\n"
-                    "  rn - to restart terminal session\n"
-                    "  rc - to restart terminal in current directory\n" );
+                    "  rn - start new terminal session\n"
+                    "  rc - start new terminal session in current directory\n" );
         return 1;
     }
 
