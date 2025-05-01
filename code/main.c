@@ -1,3 +1,8 @@
+// #######################
+// Lupi Zsh Addons V0.2.2
+// by netervezer
+// #######################
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <time.h>
 
 const char* get_os_type() {
     #ifdef __APPLE__
@@ -14,12 +20,67 @@ const char* get_os_type() {
     #endif
 }
 
+void print_calendar() {
+    time_t t = time( NULL );
+    struct tm *current_time = localtime( &t );
+    
+    int day = current_time->tm_mday;
+    int month = current_time->tm_mon + 1;    
+    int year = current_time->tm_year + 1900; 
+
+    struct tm first_day = *current_time;
+    first_day.tm_mday = 1;
+    mktime( &first_day );
+
+    int start_day = first_day.tm_wday;
+
+    int days_in_month;
+    if ( month == 2 ) {
+        if (( year % 400 == 0) || ( year % 100 != 0 && year % 4 == 0 )) {
+            days_in_month = 29;
+        } else {
+            days_in_month = 28;
+        }
+    } else if ( month == 4 || month == 6 || month == 9 || month == 11 ) {
+        days_in_month = 30;
+    } else {
+        days_in_month = 31;
+    }
+
+    const char *month_names[] = {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+    
+    // Выводим заголовок
+    printf( "\n    %s %d\n", month_names[month-1], year );
+    printf(  "Su Mo Tu We Th Fr Sa\n" );
+
+    for ( int i = 0; i < start_day; i++ ) {
+        printf( "   " );
+    }
+
+    for ( int d = 1; d <= days_in_month; d++ ) {
+        if ( d == day ) {
+            printf( "\033[1;31m%2d\033[0m ", d );
+        } else {
+            printf( "%2d ", d );
+        }
+        
+        // Переход на новую строку после субботы
+        if (( start_day + d ) % 7 == 0 || d == days_in_month ) {
+            printf( "\n" );
+        }
+    }
+    printf( "\n" );
+}
+
 void restart_terminal_new_session() {
     const char* os_type = get_os_type();
 
     if ( strcmp( os_type, "macOS" ) == 0) {
         // macOS
-        system( "open -a Terminal" );
+        system( "open -a Terminal ~" );
     } else {
         // Linux (GNOME Terminal)
         system( "gnome-terminal -- bash -c 'exec bash'" );
@@ -158,24 +219,28 @@ void print_file_contents( const char* filepath ) {
 int main( int argc, char* argv[] ) {
 
     if ( argc != 2) {
-        fprintf( stderr, "Lupi Zsh Addons v0.1\nUse:\n"
+        fprintf( stderr, "Lupi Zsh Addons v0.2.1\nUse:\n"
                     "  help - to see the command list\n"
                     "  cache - to see the terminal cache size and clean it\n"
-                    "  about - to see the information about your zsh\n"
                     "  history - to see the command history of your terminal\n"
-                    "  rn - start new terminal session\n"
-                    "  rc - start new terminal session in current directory\n" );
+                    "  new - start new terminal session\n"
+                    "  newc - start new terminal session in current directory\n"
+                    "  calendar - returns actual date and calendar\n" );
         return 1;
     }
 
     if ( strcmp( argv[1], "help" ) == 0 ) {
-        fprintf( stderr, "Lupi Zsh Addons v0.1\nUse:\n"
+        fprintf( stderr, "Use:\n"
                     "  help - to see the command list\n"
                     "  cache - to see the terminal cache size and clean it\n"
-                    "  about - to see the information about your zsh\n"
                     "  history - to see the command history of your terminal\n"
-                    "  rn - to restart terminal session\n"
-                    "  rc - to restart terminal in current directory\n" );
+                    "  new - start new terminal session\n"
+                    "  newc - start new terminal session in current directory\n"
+                    "  calendar - returns actual date and calendar\n" );
+    }
+
+    else if ( strcmp( argv[1], "date" ) == 0 ) {
+        print_calendar();
 
     } else if ( strcmp( argv[1], "cache" ) == 0 ) {
         const char* home_dir = getenv( "HOME" );
@@ -222,9 +287,6 @@ int main( int argc, char* argv[] ) {
             printf( "Clean cancelled\n" );
         }
 
-    } else if ( strcmp( argv[1], "about" ) == 0 ) {
-        printf( "###\n" );
-
     } else if ( strcmp( argv[1], "rc" ) == 0) {
         restart_terminal_current_directory();
         
@@ -233,7 +295,7 @@ int main( int argc, char* argv[] ) {
         restart_terminal_new_session();
         
 
-    } else if ( strcmp( argv[1], "history" ) == 0 ) {
+    } else if ( strcmp( argv[1], "hist" ) == 0 ) {
         const char* home_dir = getenv( "HOME" );
         if ( home_dir == NULL ) {
             fprintf( stderr, "Can't find HOME user path\n" );
