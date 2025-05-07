@@ -15,7 +15,7 @@ Ready! Now use it with command ```lupi```
 | ------------- | ------------- |
 | help | Returns the command list |
 | cache  | Returns the terminal cache size and asks for clean it  |
-| history  | Returns the command history of your terminal  |
+| hist  | Returns the command history of your terminal  |
 | new | Starts a new terminal session |
 | newc | Starts a new terminal session in current directory |
-| calendar | Returns actual date and calendar |
+| cal | Returns actual date and calendar |
