@@ -51,8 +51,7 @@ void print_calendar() {
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     };
-    
-    // Выводим заголовок
+
     printf( "\n    %s %d\n", month_names[month-1], year );
     printf(  "Su Mo Tu We Th Fr Sa\n" );
 
@@ -66,8 +65,7 @@ void print_calendar() {
         } else {
             printf( "%2d ", d );
         }
-        
-        // Переход на новую строку после субботы
+
         if (( start_day + d ) % 7 == 0 || d == days_in_month ) {
             printf( "\n" );
         }
@@ -219,13 +217,13 @@ void print_file_contents( const char* filepath ) {
 int main( int argc, char* argv[] ) {
 
     if ( argc != 2) {
-        fprintf( stderr, "Lupi Zsh Addons v0.2.1\nUse:\n"
+        fprintf( stderr, "Lupi Zsh Addons v0.2.3\nUse:\n"
                     "  help - to see the command list\n"
                     "  cache - to see the terminal cache size and clean it\n"
-                    "  history - to see the command history of your terminal\n"
+                    "  hist - to see the command history of your terminal\n"
                     "  new - start new terminal session\n"
                     "  newc - start new terminal session in current directory\n"
-                    "  calendar - returns actual date and calendar\n" );
+                    "  cal - returns actual date and calendar\n" );
         return 1;
     }
 
@@ -233,13 +231,13 @@ int main( int argc, char* argv[] ) {
         fprintf( stderr, "Use:\n"
                     "  help - to see the command list\n"
                     "  cache - to see the terminal cache size and clean it\n"
-                    "  history - to see the command history of your terminal\n"
+                    "  hist - to see the command history of your terminal\n"
                     "  new - start new terminal session\n"
                     "  newc - start new terminal session in current directory\n"
-                    "  calendar - returns actual date and calendar\n" );
+                    "  cal - returns actual date and calendar\n" );
     }
 
-    else if ( strcmp( argv[1], "date" ) == 0 ) {
+    else if ( strcmp( argv[1], "cal" ) == 0 ) {
         print_calendar();
 
     } else if ( strcmp( argv[1], "cache" ) == 0 ) {
@@ -287,11 +285,11 @@ int main( int argc, char* argv[] ) {
             printf( "Clean cancelled\n" );
         }
 
-    } else if ( strcmp( argv[1], "rc" ) == 0) {
+    } else if ( strcmp( argv[1], "newc" ) == 0) {
         restart_terminal_current_directory();
         
 
-    } else if ( strcmp( argv[1], "rn" ) == 0 ) {
+    } else if ( strcmp( argv[1], "new" ) == 0 ) {
         restart_terminal_new_session();
         
 
