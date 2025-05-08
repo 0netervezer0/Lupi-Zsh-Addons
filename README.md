@@ -10,6 +10,7 @@ chmod u+x lupi
 sudo mv lupi /usr/local/bin/
 ```
 Ready! Now use it with command ```lupi```
+
 You can delete Lupi-Zsh-Addons folder (repository folder) after installation.
 > ## Usage
 ### Default commands
