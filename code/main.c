@@ -1,7 +1,4 @@
-// #######################
-// Lupi Zsh Addons V0.2.2
-// by netervezer
-// #######################
+// Lupi Zsh Addons V0.2.4
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +9,8 @@
 #include <limits.h>
 #include <time.h>
 
+
+// Get OS type (macOS/Linuz)
 const char* get_os_type() {
     #ifdef __APPLE__
         return "macOS";
@@ -20,75 +19,77 @@ const char* get_os_type() {
     #endif
 }
 
-void print_calendar() {
+// Print calendar of month
+void print_calendar( int monthOverride ) {
     time_t t = time( NULL );
-    struct tm *current_time = localtime( &t );
-    
-    int day = current_time->tm_mday;
-    int month = current_time->tm_mon + 1;    
-    int year = current_time->tm_year + 1900; 
+    struct tm *currentTime = localtime( &t );
 
-    struct tm first_day = *current_time;
-    first_day.tm_mday = 1;
-    mktime( &first_day );
+    int day = currentTime -> tm_mday;
+    int month = ( monthOverride == 0 ) ? currentTime->tm_mon + 1 : monthOverride;
+    int year = currentTime -> tm_year + 1900;
 
-    int start_day = first_day.tm_wday;
+    struct tm firstDay = *currentTime;
+    firstDay.tm_mday = 1;
+    firstDay.tm_mon = month - 1;
+    mktime( &firstDay );
 
-    int days_in_month;
+    int startDay = firstDay.tm_wday;
+
+    int daysInMonth;
     if ( month == 2 ) {
         if (( year % 400 == 0) || ( year % 100 != 0 && year % 4 == 0 )) {
-            days_in_month = 29;
+            daysInMonth = 29;
         } else {
-            days_in_month = 28;
+            daysInMonth = 28;
         }
     } else if ( month == 4 || month == 6 || month == 9 || month == 11 ) {
-        days_in_month = 30;
+        daysInMonth = 30;
     } else {
-        days_in_month = 31;
+        daysInMonth = 31;
     }
 
-    const char *month_names[] = {
+    const char *MONTH_NAMES[] = {
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     };
 
-    printf( "\n    %s %d\n", month_names[month-1], year );
+    printf( "\n    %s %d\n", MONTH_NAMES[month - 1], year );
     printf(  "Su Mo Tu We Th Fr Sa\n" );
 
-    for ( int i = 0; i < start_day; i++ ) {
+    for ( int i = 0; i < startDay; i++ ) {
         printf( "   " );
     }
 
-    for ( int d = 1; d <= days_in_month; d++ ) {
-        if ( d == day ) {
+    for ( int d = 1; d <= daysInMonth; d++ ) {
+        if ( d == day && monthOverride == 0 ) {
             printf( "\033[1;31m%2d\033[0m ", d );
         } else {
             printf( "%2d ", d );
         }
 
-        if (( start_day + d ) % 7 == 0 || d == days_in_month ) {
+        if (( startDay + d ) % 7 == 0 || d == daysInMonth ) {
             printf( "\n" );
         }
     }
     printf( "\n" );
 }
 
+// Open new terminal session
 void restart_terminal_new_session() {
-    const char* os_type = get_os_type();
+    const char* osType = get_os_type();
 
-    if ( strcmp( os_type, "macOS" ) == 0) {
-        // macOS
+    if ( strcmp( osType, "macOS" ) == 0) {
         system( "open -a Terminal ~" );
     } else {
-        // Linux (GNOME Terminal)
         system( "gnome-terminal -- bash -c 'exec bash'" );
     }
 
-    printf( "New session started...\n" );
+    printf( "New session started\n" );
 }
 
+// Open new terminal session in current directory
 void restart_terminal_current_directory() {
-    const char* os_type = get_os_type();
+    const char* osType = get_os_type();
     char cwd[1024];
 
     if ( getcwd( cwd, sizeof( cwd )) == NULL ) {
@@ -96,13 +97,11 @@ void restart_terminal_current_directory() {
         return;
     }
 
-    if ( strcmp( os_type, "macOS" ) == 0 ) {
-        // macOS
+    if ( strcmp( osType, "macOS" ) == 0 ) {
         char command[2048];
         snprintf( command, sizeof( command ), "open -a Terminal \"%s\"", cwd );
         system( command );
     } else {
-        // Linux (GNOME Terminal)
         char command[2048];
         snprintf( command, sizeof( command ), "gnome-terminal -- bash -c 'cd %s; exec bash'", cwd );
         system( command );
@@ -111,11 +110,12 @@ void restart_terminal_current_directory() {
     printf( "New session started in current directory\n" );
 }
 
+// Calculate directory size
 long calculate_directory_size( const char* path ) {
     DIR* dir;
     struct dirent* entry;
     struct stat statbuf;
-    long total_size = 0;
+    long totalSize = 0;
 
     if (( dir = opendir( path )) == NULL ) {
         perror( "Can't find path" );
@@ -123,34 +123,35 @@ long calculate_directory_size( const char* path ) {
     }
 
     while (( entry = readdir( dir )) != NULL ) {
-        if ( strcmp( entry->d_name, "." ) == 0 || strcmp( entry->d_name, ".." ) == 0 ) {
+        if ( strcmp( entry -> d_name, "." ) == 0 || strcmp( entry -> d_name, ".." ) == 0 ) {
             continue;
         }
 
-        char full_path[1024];
-        snprintf( full_path, sizeof( full_path ), "%s/%s", path, entry->d_name );
+        char fullPath[1024];
+        snprintf( fullPath, sizeof( fullPath ), "%s/%s", path, entry -> d_name );
 
-        if ( stat( full_path, &statbuf ) == -1 ) {
+        if ( stat( fullPath, &statbuf ) == -1 ) {
             perror( "Can't get file information" );
             continue;
         }
 
         if ( S_ISDIR( statbuf.st_mode )) {
-            long dir_size = calculate_directory_size( full_path );
+            long dir_size = calculate_directory_size( fullPath );
             if ( dir_size == -1 ) {
                 closedir( dir );
                 return -1;
             }
-            total_size += dir_size;
+            totalSize += dir_size;
         } else {
-            total_size += statbuf.st_size;
+            totalSize += statbuf.st_size;
         }
     }
 
     closedir( dir );
-    return total_size;
+    return totalSize;
 }
 
+// Delete files in directory
 void clear_directory( const char* path ) {
     DIR* dir;
     struct dirent* entry;
@@ -162,43 +163,44 @@ void clear_directory( const char* path ) {
     }
 
     while (( entry = readdir(dir)) != NULL ) {
-        if ( strcmp( entry->d_name, "." ) == 0 || strcmp( entry->d_name, ".." ) == 0 ) {
+        if ( strcmp( entry -> d_name, "." ) == 0 || strcmp( entry -> d_name, ".." ) == 0 ) {
             continue;
         }
 
-        char full_path[1024];
-        snprintf( full_path, sizeof( full_path ), "%s/%s", path, entry->d_name );
+        char fullPath[1024];
+        snprintf( fullPath, sizeof( fullPath ), "%s/%s", path, entry -> d_name );
 
-        if ( stat( full_path, &statbuf ) == -1 ) {
+        if ( stat( fullPath, &statbuf ) == -1 ) {
             perror( "Can't get file include" );
             continue;
         }
 
         if ( S_ISDIR( statbuf.st_mode )) {
-            clear_directory( full_path );
-            rmdir( full_path ); 
+            clear_directory( fullPath );
+            rmdir( fullPath ); 
         } else {
-            if ( unlink( full_path) == -1 ) {
+            if ( unlink( fullPath) == -1 ) {
                 perror( "Can't delete files" );
             }
         }
     }
 }
 
-void clear_zsh_history( const char* home_dir ) {
-    char zsh_history_path[1024];
-    snprintf( zsh_history_path, sizeof( zsh_history_path ), "%s/.zsh_history", home_dir );
+// Clear .zsh_history file
+void clear_zsh_history( const char* homeDir ) {
+    char path[1024];
+    snprintf( path, sizeof( path ), "%s/.zsh_history", homeDir );
 
-    FILE* zsh_history_file = fopen( zsh_history_path, "w" );
-    if ( zsh_history_file != NULL ) {
-        fclose( zsh_history_file );
+    FILE* file = fopen( path, "w" );
+    if ( file != NULL ) {
+        fclose( file );
     } else {
         perror( "Can't clear .zsh_history" );
     }
 }
 
+// Print content in file 
 void print_file_contents( const char* filepath ) {
-
     FILE* file = fopen( filepath, "r" );
     if ( file == NULL ) {
         perror( "Can't open file" );
@@ -213,87 +215,121 @@ void print_file_contents( const char* filepath ) {
     fclose( file );
 }
 
+// Disk space (df -h ~)
+void show_disk_space() {
+    system( "df -h ~" );
+}
 
+// Edit the info in .zshrc file using nano
+void edit_zshrc() {
+    const char* editor = getenv( "EDITOR" );
+    if ( !editor ) editor = "nano";
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "HOME not set\n" );
+        return;
+    }
+
+    char cmd[2048];
+    snprintf( cmd, sizeof( cmd ), "%s %s/.zshrc", editor, homeDir );
+    system( cmd );
+}
+
+// Print the info in .zshrc file
+void view_zshrc() {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "HOME not set\n" );
+        return;
+    }
+
+    char path[1024];
+    snprintf( path, sizeof( path ), "%s/.zshrc", homeDir );
+    print_file_contents( path );
+}
+
+int month_from_string( const char* str ) {
+    const char* months[] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+    for ( int i = 0; i < 12; ++i ) {
+        if ( strcasecmp( str, months[i] ) == 0 )
+            return i + 1;
+    }
+    int num = atoi( str );
+    if ( num >= 1 && num <= 12 ) return num;
+    return 0;
+}
+
+// Main Function
 int main( int argc, char* argv[] ) {
-
-    if ( argc != 2) {
-        fprintf( stderr, "Lupi Zsh Addons v0.2.3\nUse:\n"
-                    "  help - to see the command list\n"
-                    "  cache - to see the terminal cache size and clean it\n"
-                    "  hist - to see the command history of your terminal\n"
-                    "  new - start new terminal session\n"
-                    "  newc - start new terminal session in current directory\n"
-                    "  cal - returns actual date and calendar\n" );
+    if ( argc < 2 ) {
+        fprintf( stderr, "Lupi Zsh Addons v0.2.4\nUse:\n"
+            "  Default commands:\n"
+            "    help - the command list\n"
+            "    cache - the terminal cache size and clean it\n"
+            "    hist - the command history of your terminal\n"
+            "    new - start new terminal session\n"
+            "    newc - start new terminal session in current directory\n"
+            "    space - show disk usage of home directory\n"
+            "\n"
+            "  Resource commands:\n"
+            "   Usage: rc [option] - show or edit .zshrc\n"
+            "     Options:\n"
+            "      view - show .zshrc contents\n"
+            "      edit - edit .zshrc using nano\n"
+            "\n"
+            "  Calendar commands:\n"
+            "   cal - returns actual calendar month\n"
+            "   Usage: cal [option] - return choosen calendar month\n"
+            "     Options:\n"
+            "      { jan, feb, mar, apr, may, jun,\n"
+            "       jul, aug, sep, oct, nov, dec }\n"
+            "      { 1, 2, 3, 4, 5, 6,\n"
+            "       7, 8, 9, 10, 11, 12 }\n" );
         return 1;
     }
 
-    if ( strcmp( argv[1], "help" ) == 0 ) {
-        fprintf( stderr, "Use:\n"
-                    "  help - to see the command list\n"
-                    "  cache - to see the terminal cache size and clean it\n"
-                    "  hist - to see the command history of your terminal\n"
-                    "  new - start new terminal session\n"
-                    "  newc - start new terminal session in current directory\n"
-                    "  cal - returns actual date and calendar\n" );
-    }
+    const char* cmd = argv[1];
 
-    else if ( strcmp( argv[1], "cal" ) == 0 ) {
-        print_calendar();
+    if ( strcmp( cmd, "space" ) == 0 ) {
+        show_disk_space();
 
-    } else if ( strcmp( argv[1], "cache" ) == 0 ) {
-        const char* home_dir = getenv( "HOME" );
-        if ( home_dir == NULL ) {
-            fprintf( stderr, "Can't find HOME user path\n" );
-            return 1;
-        }
-
-        char sessions_dir[1024];
-        snprintf( sessions_dir, sizeof( sessions_dir ), "%s/.zsh_sessions", home_dir );
-
-        struct stat statbuf;
-        if ( stat( sessions_dir, &statbuf ) == -1 || !S_ISDIR( statbuf.st_mode )) {
-            fprintf( stderr, "Can't find .zsh_sessions folder\n" );
-            return 1;
-        }
-
-        long dir_size = calculate_directory_size( sessions_dir );
-        if ( dir_size == -1 ) {
-            fprintf( stderr, "Can't calculate size of .zsh_sessions\n" );
-            return 1;
-        }
-
-        char zsh_history_path[1024];
-        snprintf( zsh_history_path, sizeof( zsh_history_path ), "%s/.zsh_history", home_dir );
-
-        long zsh_history_size = 0;
-        if ( stat( zsh_history_path, &statbuf ) != -1 ) {
-            zsh_history_size = statbuf.st_size;
-        }
-
-        long total_cache_size = dir_size + zsh_history_size;
-        printf( "Cache size: %ld bytes\n", total_cache_size );
-
-        printf( "Clean cache? (y/n): " );
-        char response;
-        scanf( " %c", &response );
-
-        if ( response == 'y' || response == 'Y' ) {
-            clear_directory( sessions_dir );
-            clear_zsh_history( home_dir );
-            printf( "Cache cleaned\n" );
+    } else if ( strcmp( cmd, "rc" ) == 0 ) {
+        if ( argc == 3 ) {
+            if ( strcmp( argv[2], "view" ) == 0 ) {
+                view_zshrc();
+            } else if ( strcmp( argv[2], "edit" ) == 0 ) {
+                edit_zshrc();
+            } else {
+                fprintf( stderr, "Usage: lupi rc [option] \n"
+                "  Options:\n"
+                "   view - show .zshrc contents\n"
+                "   edit - edit .zshrc using nano\n" );
+            }
         } else {
-            printf( "Clean cancelled\n" );
+            fprintf( stderr, "Usage: lupi rc [option] \n"
+                "  Options:\n"
+                "   view - show .zshrc contents\n"
+                "   edit - edit .zshrc using nano\n" );
         }
 
-    } else if ( strcmp( argv[1], "newc" ) == 0) {
-        restart_terminal_current_directory();
-        
+    } else if ( strcmp( cmd, "cal" ) == 0 ) {
+        int monthOverride = 0;
+        if ( argc == 3 ) { // if programm got 3 arguments (return selected month)
+            monthOverride = month_from_string( argv[2] );
+            if ( monthOverride == 0 ) { 
+                fprintf( stderr, "Invalid month: %s\n", argv[2] );
+                return 1;
+            }
+        }
+        print_calendar( monthOverride );
 
-    } else if ( strcmp( argv[1], "new" ) == 0 ) {
+    } else if ( strcmp( cmd, "new" ) == 0 ) {
         restart_terminal_new_session();
-        
 
-    } else if ( strcmp( argv[1], "hist" ) == 0 ) {
+    } else if ( strcmp( cmd, "newc" ) == 0 ) {
+        restart_terminal_current_directory();
+
+    } else if ( strcmp( cmd, "hist" ) == 0 ) {
         const char* home_dir = getenv( "HOME" );
         if ( home_dir == NULL ) {
             fprintf( stderr, "Can't find HOME user path\n" );
@@ -313,8 +349,78 @@ int main( int argc, char* argv[] ) {
         printf( "Your command history: \n" );
         print_file_contents( filepath );
 
+    } else if ( strcmp( cmd, "cache" ) == 0 ) {
+        const char* homeDir = getenv( "HOME" );
+        if ( homeDir == NULL ) {
+            fprintf( stderr, "Can't find HOME user path\n" );
+            return 1;
+        }
+
+        char sessionsDir[1024];
+        snprintf( sessionsDir, sizeof( sessionsDir ), "%s/.zsh_sessions", homeDir );
+
+        struct stat statbuf;
+        if ( stat( sessionsDir, &statbuf ) == -1 || !S_ISDIR( statbuf.st_mode )) {
+            fprintf( stderr, "Can't find .zsh_sessions folder\n" );
+            return 1;
+        }
+
+        long dirSize = calculate_directory_size( sessionsDir );
+        if ( dirSize == -1 ) {
+            fprintf( stderr, "Can't calculate size of .zsh_sessions\n" );
+            return 1;
+        }
+
+        char zshHistoryPath[1024];
+        snprintf( zshHistoryPath, sizeof( zshHistoryPath ), "%s/.zsh_history", homeDir );
+
+        long zshHistorySize = 0;
+        if ( stat( zshHistoryPath, &statbuf ) != -1 ) {
+            zshHistorySize = statbuf.st_size;
+        }
+
+        long totalCacheSize = dirSize + zshHistorySize;
+        printf( "Cache size: %ld bytes\n", totalCacheSize );
+
+        printf( "Clean cache? (y/n): " );
+        char response;
+        scanf( " %c", &response );
+
+        if ( response == 'y' || response == 'Y' ) {
+            clear_directory( sessionsDir );
+            clear_zsh_history( homeDir );
+            printf( "Cache cleaned\n" );
+        } else {
+            printf( "Clean cancelled\n" );
+        }
+
+    } else if ( strcmp( cmd, "help" ) == 0 ) {
+        fprintf( stderr, "Use:\n"
+            "  Default commands:\n"
+            "    help - the command list\n"
+            "    cache - the terminal cache size and clean it\n"
+            "    hist - the command history of your terminal\n"
+            "    new - start new terminal session\n"
+            "    newc - start new terminal session in current directory\n"
+            "    space - show disk usage of home directory\n"
+            "\n"
+            "  Resource commands:\n"
+            "   Usage: rc [option] - show or edit .zshrc\n"
+            "     Options:\n"
+            "      view - show .zshrc contents\n"
+            "      edit - edit .zshrc using nano\n"
+            "\n"
+            "  Calendar commands:\n"
+            "   cal - returns actual calendar month\n"
+            "   Usage: cal [option] - return choosen calendar month\n"
+            "     Options:\n"
+            "      { jan, feb, mar, apr, may, jun,\n"
+            "       jul, aug, sep, oct, nov, dec }\n"
+            "      { 1, 2, 3, 4, 5, 6,\n"
+            "      7, 8, 9, 10, 11, 12 }\n" );
+
     } else {
-        fprintf( stderr, "Unknown argument '%s'. Use 'help' to see the command list\n", argv[1] );
+        fprintf( stderr, "Unknown argument '%s'. Use 'help' to see the command list\n", cmd );
         return 1;
     }
 
