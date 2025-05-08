@@ -1,4 +1,4 @@
-// Lupi Zsh Addons V0.2.4
+// Lupi Zsh Addons V0.3
 
 #include <stdio.h>
 #include <stdlib.h>
