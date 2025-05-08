@@ -11,6 +11,7 @@ sudo mv lupi /usr/local/bin/
 ```
 Ready! Now use it with command ```lupi```
 > ## Usage
+### Default commands
 | Command  | Description |
 | ------------- | ------------- |
 | help | Returns the command list |
@@ -18,4 +19,14 @@ Ready! Now use it with command ```lupi```
 | hist  | Returns the command history of your terminal  |
 | new | Starts a new terminal session |
 | newc | Starts a new terminal session in current directory |
-| cal | Returns actual date and calendar |
+| space | Returns disk usage of home direactory |
+### Calendar commands
+| Command  | Description |
+| ------------- | ------------- |
+| cal | Returns actual calendar month |
+| cal [month]  | Returns choosen calendar month |
+### Resource commands
+| Command  | Description |
+| ------------- | ------------- |
+| rc view | Returns .zshrc file information |
+| rc edit | Edit .zshrc file using nano |
