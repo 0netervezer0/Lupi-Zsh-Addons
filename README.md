@@ -14,21 +14,27 @@ Ready! Now use it with command ```lupi```
 You can delete Lupi-Zsh-Addons folder (repository folder) after installation.
 > ## Usage
 ### Default commands
-| Command  | Description |
+| Command | Description |
 | ------------- | ------------- |
 | help | Returns the command list |
-| cache  | Returns the terminal cache size and asks for clean it  |
-| hist  | Returns the command history of your terminal  |
+| cache  | Returns the terminal cache size and asks for clean it |
 | new | Starts a new terminal session |
 | newc | Starts a new terminal session in current directory |
 | space | Returns disk usage of home direactory |
 ### Calendar commands
-| Command  | Description |
+| Command | Description |
 | ------------- | ------------- |
 | cal | Returns actual month calendar |
 | cal [month]  | Returns choosen month calendar |
 ### Resource commands
-| Command  | Description |
+| Command | Description |
 | ------------- | ------------- |
+| hist  | Returns the command history of your terminal |
+| sethist on | Turn on command history |
+| sethist off | Turn off command history |
 | rc view | Returns .zshrc file information |
 | rc edit | Edit .zshrc file using nano |
+### Git command
+| Command | Description |
+| ------------- | ------------- |
+| gitstat [username] | Returns simple GitHub statistic of any user |
