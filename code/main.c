@@ -1,4 +1,4 @@
-// Lupi Zsh Addons V0.3
+// Lupi Zsh Addons V0.3.1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -259,19 +259,69 @@ int month_from_string( const char* str ) {
     return 0;
 }
 
+// Repeat command n times
+void repeat_command( int times, char** cmdArgs ) {
+    char buffer[2048] = { 0 };
+    for ( int i = 0; cmdArgs[i]; i++ ) {
+        strcat( buffer, cmdArgs[i] );
+        strcat( buffer, " " );
+    }
+    for ( int i = 0; i < times; i++ ) {
+        system( buffer );
+    }
+}
+
+// Disable or enable history
+void sethist( const char* mode ) {
+    const char* home = getenv( "HOME" );
+    char histfile[1024];
+    snprintf( histfile, sizeof( histfile ), "%s/.zshrc", home );
+
+    FILE* file = fopen( histfile, "a" );
+    if ( file == NULL ) {
+        perror( "Can't open .zshrc" );
+        return;
+    }
+
+    if ( strcmp( mode, "off" ) == 0 ) {
+        fprintf( file, "\nsetopt NO_HIST_IGNORE_ALL\nsetopt NO_HIST_SAVE_NO_DUPS\nunsetopt HISTFILE\n" );
+        printf( "History disabled\n" );
+    } else if ( strcmp( mode, "on" ) == 0 ) {
+        fprintf( file, "\nsetopt HISTFILE\n" );
+        printf( "History enabled\n" );
+    } else {
+        printf( "Unknown sechist option: %s\n", mode );
+    }
+
+    fclose( file );
+}
+
+// Get GitHub user info via curl
+void gitstat( const char* username ) {
+    char cmd[1024];
+    snprintf( cmd, sizeof( cmd ),
+      "curl -s https://api.github.com/users/%s | grep -E \"login|name|public_repos|followers|following\"",
+      username );
+    system( cmd );
+}
+
 // Main Function
 int main( int argc, char* argv[] ) {
     if ( argc < 2 ) {
-        fprintf( stderr, "Lupi Zsh Addons v0.2.4\nUse:\n"
+        fprintf( stderr, "Lupi Zsh Addons v0.3.1\nUse:\n"
             "  Default commands:\n"
-            "    help - the command list\n"
-            "    cache - the terminal cache size and clean it\n"
-            "    hist - the command history of your terminal\n"
-            "    new - start new terminal session\n"
-            "    newc - start new terminal session in current directory\n"
-            "    space - show disk usage of home directory\n"
+            "   help - the command list\n"
+            "   cache - the terminal cache size and clean it\n"
+            "   new - start new terminal session\n"
+            "   newc - start new terminal session in current directory\n"
+            "   space - show disk usage of home directory\n"
             "\n"
             "  Resource commands:\n"
+            "   hist - the command history of your terminal\n"
+            "   Usage: sethist [option] - turn on/off command history\n"
+            "     Options:\n"
+            "      on - turn on\n"
+            "      off - turn off\n"
             "   Usage: rc [option] - show or edit .zshrc\n"
             "     Options:\n"
             "      view - show .zshrc contents\n"
@@ -284,7 +334,10 @@ int main( int argc, char* argv[] ) {
             "      { jan, feb, mar, apr, may, jun,\n"
             "       jul, aug, sep, oct, nov, dec }\n"
             "      { 1, 2, 3, 4, 5, 6,\n"
-            "       7, 8, 9, 10, 11, 12 }\n" );
+            "       7, 8, 9, 10, 11, 12 }\n"
+            "\n"
+            "  Git commands:\n"
+            "   gitstat [username] - github statistic of any user\n" );
         return 1;
     }
 
@@ -292,6 +345,16 @@ int main( int argc, char* argv[] ) {
 
     if ( strcmp( cmd, "space" ) == 0 ) {
         show_disk_space();
+
+    } else if ( strcmp( cmd, "sethist" ) == 0 ) {
+        if ( argc == 3 ) {
+            sethist( argv[2] );
+        } else {
+            fprintf( stderr, "Usage: sethist [option] - turn on/off command history\n"
+            "  Options:\n"
+            "   on - turn on\n"
+            "   off - turn off\n" );
+        }
 
     } else if ( strcmp( cmd, "rc" ) == 0 ) {
         if ( argc == 3 ) {
@@ -322,6 +385,13 @@ int main( int argc, char* argv[] ) {
             }
         }
         print_calendar( monthOverride );
+
+    } else if ( strcmp( cmd, "gitstat" ) == 0 ) {
+        if ( argc == 3 ) {
+            gitstat( argv[2] );
+        } else {
+            fprintf( stderr, "Usage: gitstat [username]\n" );
+        }
 
     } else if ( strcmp( cmd, "new" ) == 0 ) {
         restart_terminal_new_session();
@@ -397,14 +467,18 @@ int main( int argc, char* argv[] ) {
     } else if ( strcmp( cmd, "help" ) == 0 ) {
         fprintf( stderr, "Use:\n"
             "  Default commands:\n"
-            "    help - the command list\n"
-            "    cache - the terminal cache size and clean it\n"
-            "    hist - the command history of your terminal\n"
-            "    new - start new terminal session\n"
-            "    newc - start new terminal session in current directory\n"
-            "    space - show disk usage of home directory\n"
+            "   help - the command list\n"
+            "   cache - the terminal cache size and clean it\n"
+            "   new - start new terminal session\n"
+            "   newc - start new terminal session in current directory\n"
+            "   space - show disk usage of home directory\n"
             "\n"
             "  Resource commands:\n"
+            "   hist - the command history of your terminal\n"
+            "   Usage: sethist [option] - turn on/off command history\n"
+            "     Options:\n"
+            "      on - turn on\n"
+            "      off - turn off\n"
             "   Usage: rc [option] - show or edit .zshrc\n"
             "     Options:\n"
             "      view - show .zshrc contents\n"
@@ -417,7 +491,10 @@ int main( int argc, char* argv[] ) {
             "      { jan, feb, mar, apr, may, jun,\n"
             "       jul, aug, sep, oct, nov, dec }\n"
             "      { 1, 2, 3, 4, 5, 6,\n"
-            "      7, 8, 9, 10, 11, 12 }\n" );
+            "       7, 8, 9, 10, 11, 12 }\n"
+            "\n"
+            "  Git commands:\n"
+            "   gitstat [username] - github statistic of any user\n" );
 
     } else {
         fprintf( stderr, "Unknown argument '%s'. Use 'help' to see the command list\n", cmd );
