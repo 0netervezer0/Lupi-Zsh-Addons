@@ -25,8 +25,8 @@ You can delete Lupi-Zsh-Addons folder (repository folder) after installation.
 ### Calendar commands
 | Command  | Description |
 | ------------- | ------------- |
-| cal | Returns actual calendar month |
-| cal [month]  | Returns choosen calendar month |
+| cal | Returns actual month calendar |
+| cal [month]  | Returns choosen month calendar |
 ### Resource commands
 | Command  | Description |
 | ------------- | ------------- |
