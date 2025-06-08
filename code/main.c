@@ -1,4 +1,4 @@
-// Lupi Zsh Addons V0.3.1
+// Lupi Zsh Addons V0.4
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,10 +7,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <errno.h>
 #include <time.h>
 
 
-// Get OS type (macOS/Linuz)
+// Get OS type (macOS/Linux)
 const char* get_os_type() {
     #ifdef __APPLE__
         return "macOS";
@@ -271,44 +272,139 @@ void repeat_command( int times, char** cmdArgs ) {
     }
 }
 
-// Disable or enable history
-void sethist( const char* mode ) {
-    const char* home = getenv( "HOME" );
-    char histfile[1024];
-    snprintf( histfile, sizeof( histfile ), "%s/.zshrc", home );
+// Get GitHub user info via curl
+void gitstat( const char* username ) {
+    printf( "GitHub Stats for %s\n", username );
+    printf( "-------------------------\n" );
+    char cmd[2048];
+    snprintf( cmd, sizeof( cmd ),
+        "curl -s https://api.github.com/users/%s | "
+        "jq -r '.login, .name, \"Repos: \"+(.public_repos|tostring), "
+        "\"Followers: \"+(.followers|tostring), "
+        "\"Following: \"+(.following|tostring)'",
+        username );
+    system( cmd );
+}
 
-    FILE* file = fopen( histfile, "a" );
-    if ( file == NULL ) {
-        perror( "Can't open .zshrc" );
+// Edit user script
+void script_edit( const char* name ) {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "HOME not set\n" );
         return;
     }
 
-    if ( strcmp( mode, "off" ) == 0 ) {
-        fprintf( file, "\nsetopt NO_HIST_IGNORE_ALL\nsetopt NO_HIST_SAVE_NO_DUPS\nunsetopt HISTFILE\n" );
-        printf( "History disabled\n" );
-    } else if ( strcmp( mode, "on" ) == 0 ) {
-        fprintf( file, "\nsetopt HISTFILE\n" );
-        printf( "History enabled\n" );
-    } else {
-        printf( "Unknown sechist option: %s\n", mode );
+    char path[1024];
+    snprintf( path, sizeof( path ), "%s/my scripts/%s.sh", homeDir, name );
+
+    if ( access( path, F_OK ) == -1 ) {
+        fprintf( stderr, "Script '%s.sh' not found in ~/my scripts\n", name );
+        return;
     }
 
-    fclose( file );
-}
-
-// Get GitHub user info via curl
-void gitstat( const char* username ) {
-    char cmd[1024];
-    snprintf( cmd, sizeof( cmd ),
-      "curl -s https://api.github.com/users/%s | grep -E \"login|name|public_repos|followers|following\"",
-      username );
+    char cmd[2048];
+    snprintf( cmd, sizeof( cmd ), "nano \"%s\"", path );
     system( cmd );
 }
+
+// Delete user script
+void script_delete( const char* name ) {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "HOME not set\n" );
+        return;
+    }
+
+    char path[1024];
+    snprintf( path, sizeof( path ), "%s/my scripts/%s.sh", homeDir, name );
+
+    if ( unlink( path ) == 0 ) {
+        printf( "Script '%s.sh' deleted from ~/my scripts\n", name );
+    } else {
+        perror( "Can't delete script" );
+    }
+}
+
+// List all user scripts
+void script_list() {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "HOME not set\n" );
+        return;
+    }
+
+    char path[1024];
+    snprintf( path, sizeof( path ), "%s/my scripts", homeDir );
+
+    DIR* dir = opendir( path );
+    if ( !dir ) {
+        perror( "Can't open ~/my scripts" );
+        return;
+    }
+
+    struct dirent* entry;
+    printf( "Your scripts:\n" );
+    while (( entry = readdir( dir )) != NULL ) {
+        if ( strstr( entry -> d_name, ".sh" )) {
+            printf( " - %s\n", entry -> d_name );
+        }
+    }
+
+    closedir( dir );
+}
+
+
+// Create user script
+void script_create( const char* name, const char* scriptPath ) {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "HOME not set\n" );
+        return;
+    }
+
+    char targetDir[1024];
+    snprintf( targetDir, sizeof( targetDir ), "%s/my scripts", homeDir );
+
+    struct stat st = {0};
+    if ( stat( targetDir, &st ) == -1 ) {
+        mkdir( targetDir, 0700 );
+    }
+
+    char destPath[1024];
+    snprintf( destPath, sizeof( destPath ), "%s/%s.sh", targetDir, name );
+
+    FILE* src = fopen( scriptPath, "r" );
+    if ( !src ) {
+        perror( "Can't open source script" );
+        return;
+    }
+
+    FILE* dest = fopen( destPath, "w" );
+    if ( !dest ) {
+        perror( "Can't create script in my scripts" );
+        fclose( src );
+        return;
+    }
+
+    char buffer[1024];
+    size_t bytes;
+    while (( bytes = fread( buffer, 1, sizeof( buffer ), src )) > 0 ) {
+        fwrite( buffer, 1, bytes, dest );
+    }
+
+    fclose( src );
+    fclose( dest );
+    chmod( destPath, 0755 );
+
+    printf( "Script '%s.sh' created in ~/my scripts\n", name );
+}
+
+
 
 // Main Function
 int main( int argc, char* argv[] ) {
     if ( argc < 2 ) {
-        fprintf( stderr, "Lupi Zsh Addons v0.3.1\nUse:\n"
+        fprintf( stderr, "Lupi Zsh Addons v0.4\nUse:\n"
             "  Default commands:\n"
             "   help - the command list\n"
             "   cache - the terminal cache size and clean it\n"
@@ -316,16 +412,20 @@ int main( int argc, char* argv[] ) {
             "   newc - start new terminal session in current directory\n"
             "   space - show disk usage of home directory\n"
             "\n"
-            "  Resource commands:\n"
+            "  Environment commands:\n"
             "   hist - the command history of your terminal\n"
-            "   Usage: sethist [option] - turn on/off command history\n"
-            "     Options:\n"
-            "      on - turn on\n"
-            "      off - turn off\n"
             "   Usage: rc [option] - show or edit .zshrc\n"
             "     Options:\n"
             "      view - show .zshrc contents\n"
             "      edit - edit .zshrc using nano\n"
+            "   Usage: script [option] [script name]\n"
+            "     Options:\n"
+            "      edit [script name] - edit your script using nano\n"
+            "      delete [script name] - remove your script\n"
+            "      list - return a list of your scripts\n"
+            "     Usage: script create [script name] [.sh file path]\n"
+            "      - сreates a command that executes your script\n"
+            "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n"
             "\n"
             "  Calendar commands:\n"
             "   cal - returns actual calendar month\n"
@@ -346,15 +446,42 @@ int main( int argc, char* argv[] ) {
     if ( strcmp( cmd, "space" ) == 0 ) {
         show_disk_space();
 
-    } else if ( strcmp( cmd, "sethist" ) == 0 ) {
-        if ( argc == 3 ) {
-            sethist( argv[2] );
-        } else {
-            fprintf( stderr, "Usage: sethist [option] - turn on/off command history\n"
-            "  Options:\n"
-            "   on - turn on\n"
-            "   off - turn off\n" );
-        }
+    } else if ( strcmp( cmd, "script" ) == 0 ) {
+        if ( argc >= 3 ) {
+            if ( strcmp( argv[2], "edit" ) == 0 ) {
+                if ( argc == 4 ) {
+                    script_edit( argv[3] );
+                } else {
+                    fprintf( stderr, "Usage: script [option] [script name]\n"
+                    "     Options:\n"
+                    "      edit - edit your script using nano\n"
+                    "      delete - remove your script\n" );
+                }
+            } else if ( strcmp( argv[2], "delete" ) == 0 ) {
+                if ( argc == 4 ) {
+                    script_delete( argv[3] );
+                } else {
+                    fprintf( stderr, "Usage: script [option] [script name]\n"
+                    "     Options:\n"
+                    "      edit - edit your script using nano\n"
+                    "      delete - remove your script\n" );
+                }
+            } else if ( strcmp( argv[2], "create" ) == 0 ) {
+                if ( argc == 5 ) {
+                    script_create( argv[3], argv[4] );
+                } else {
+                    fprintf( stderr, "Usage: script create [script name] [.sh file path]\n"
+                    "     - сreates a command that executes your script\n"
+                    "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n" );
+                }
+            } else if ( strcmp( argv[2], "list" ) == 0 ) {
+                script_list();
+            } else {
+                fprintf( stderr, "Usage: script create [script name] [.sh file path]\n"
+                "     - сreates a command that executes your script\n"
+                "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n" );
+            }
+        } else { fprintf( stderr, "Not enough arguments! Use 'help'\n" ); }
 
     } else if ( strcmp( cmd, "rc" ) == 0 ) {
         if ( argc == 3 ) {
@@ -473,16 +600,20 @@ int main( int argc, char* argv[] ) {
             "   newc - start new terminal session in current directory\n"
             "   space - show disk usage of home directory\n"
             "\n"
-            "  Resource commands:\n"
+            "  Environment commands:\n"
             "   hist - the command history of your terminal\n"
-            "   Usage: sethist [option] - turn on/off command history\n"
-            "     Options:\n"
-            "      on - turn on\n"
-            "      off - turn off\n"
             "   Usage: rc [option] - show or edit .zshrc\n"
             "     Options:\n"
             "      view - show .zshrc contents\n"
             "      edit - edit .zshrc using nano\n"
+            "   Usage: script [option] [script name]\n"
+            "     Options:\n"
+            "      edit [script name] - edit your script using nano\n"
+            "      delete [script name] - remove your script\n"
+            "      list - return a list of your scripts\n"
+            "     Usage: script create [script name] [.sh file path]\n"
+            "      - сreates a command that executes your script\n"
+            "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n"
             "\n"
             "  Calendar commands:\n"
             "   cal - returns actual calendar month\n"
@@ -497,6 +628,28 @@ int main( int argc, char* argv[] ) {
             "   gitstat [username] - github statistic of any user\n" );
 
     } else {
+        // Try to execute user script from ~/my scripts
+        const char* homeDir = getenv( "HOME" );
+        if ( homeDir ) {
+            char scriptPath[1024];
+            snprintf( scriptPath, sizeof( scriptPath ), "%s/my scripts/%s.sh", homeDir, cmd );
+
+            if ( access( scriptPath, X_OK ) == 0 ) {
+                char fullCmd[2048] = { 0 };
+                strcat( fullCmd, "\"" );
+                strcat( fullCmd, scriptPath );
+                strcat( fullCmd, "\"" );
+                // Append additional arguments if any
+                for ( int i = 2; i < argc; ++i ) {
+                    strcat( fullCmd, " \"" );
+                    strcat( fullCmd, argv[i] );
+                    strcat( fullCmd, "\"" );
+                }
+                system( fullCmd );
+                return 0;
+            }
+        }
+
         fprintf( stderr, "Unknown argument '%s'. Use 'help' to see the command list\n", cmd );
         return 1;
     }
