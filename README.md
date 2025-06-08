@@ -26,14 +26,16 @@ You can delete Lupi-Zsh-Addons folder (repository folder) after installation.
 | ------------- | ------------- |
 | cal | Returns actual month calendar |
 | cal [month]  | Returns choosen month calendar |
-### Resource commands
+### Environment commands
 | Command | Description |
 | ------------- | ------------- |
 | hist  | Returns the command history of your terminal |
-| sethist on | Turn on command history |
-| sethist off | Turn off command history |
 | rc view | Returns .zshrc file information |
 | rc edit | Edit .zshrc file using nano |
+| script create [name] [.sh file] | Сreates a script in "my scripts" folderthat can be used by `lupi [name]` and execute actions from the .sh file |
+| script edit [name] | Edit your script using nano |
+| script delete [name ] | Delete selected script |
+| script list | Returns a list of your scipts |
 ### Git command
 | Command | Description |
 | ------------- | ------------- |
