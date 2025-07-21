@@ -1,4 +1,4 @@
-// Lupi Zsh Addons V0.4
+// Lupi Zsh Addons V0.4.2
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +9,17 @@
 #include <limits.h>
 #include <errno.h>
 #include <time.h>
+
+#define RED     "\033[1;31m"
+#define GREEN   "\033[1;32m"
+#define YELLOW  "\033[1;33m"
+#define BLUE    "\033[1;34m"
+#define RESET   "\033[0m"
+
+#define FLAG_ERR   RED "[X]" RESET
+#define FLAG_WARN  YELLOW "[!]" RESET
+#define FLAG_INFO  BLUE "[?]" RESET
+#define FLAG_OK    GREEN "[✓]" RESET
 
 
 // Get OS type (macOS/Linux)
@@ -94,7 +105,7 @@ void restart_terminal_current_directory() {
     char cwd[1024];
 
     if ( getcwd( cwd, sizeof( cwd )) == NULL ) {
-        perror( "Can't get current directory" );
+        fprintf( stderr, "%s Can't get current directory", FLAG_ERR );
         return;
     }
 
@@ -119,9 +130,10 @@ long calculate_directory_size( const char* path ) {
     long totalSize = 0;
 
     if (( dir = opendir( path )) == NULL ) {
-        perror( "Can't find path" );
+        fprintf( stderr, "%s Can't find path", FLAG_ERR );
         return -1;
     }
+
 
     while (( entry = readdir( dir )) != NULL ) {
         if ( strcmp( entry -> d_name, "." ) == 0 || strcmp( entry -> d_name, ".." ) == 0 ) {
@@ -132,7 +144,7 @@ long calculate_directory_size( const char* path ) {
         snprintf( fullPath, sizeof( fullPath ), "%s/%s", path, entry -> d_name );
 
         if ( stat( fullPath, &statbuf ) == -1 ) {
-            perror( "Can't get file information" );
+            fprintf( stderr, "%s Can't get file information", FLAG_ERR );
             continue;
         }
 
@@ -159,7 +171,7 @@ void clear_directory( const char* path ) {
     struct stat statbuf;
 
     if (( dir = opendir( path )) == NULL ) {
-        perror( "Can't open folder" );
+        fprintf( stderr, "%s Can't open folder", FLAG_ERR );
         return;
     }
 
@@ -172,7 +184,7 @@ void clear_directory( const char* path ) {
         snprintf( fullPath, sizeof( fullPath ), "%s/%s", path, entry -> d_name );
 
         if ( stat( fullPath, &statbuf ) == -1 ) {
-            perror( "Can't get file include" );
+            fprintf( stderr, "%s Can't get file include", FLAG_ERR );
             continue;
         }
 
@@ -181,7 +193,7 @@ void clear_directory( const char* path ) {
             rmdir( fullPath ); 
         } else {
             if ( unlink( fullPath) == -1 ) {
-                perror( "Can't delete files" );
+                fprintf( stderr, "%s Can't delete files", FLAG_ERR );
             }
         }
     }
@@ -196,7 +208,7 @@ void clear_zsh_history( const char* homeDir ) {
     if ( file != NULL ) {
         fclose( file );
     } else {
-        perror( "Can't clear .zsh_history" );
+        fprintf( stderr, "%s Can't clear .zsh_history", FLAG_ERR );
     }
 }
 
@@ -204,7 +216,7 @@ void clear_zsh_history( const char* homeDir ) {
 void print_file_contents( const char* filepath ) {
     FILE* file = fopen( filepath, "r" );
     if ( file == NULL ) {
-        perror( "Can't open file" );
+        fprintf( stderr, "%s Can't open file", FLAG_ERR );
         return;
     }
 
@@ -227,7 +239,7 @@ void edit_zshrc() {
     if ( !editor ) editor = "nano";
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
-        fprintf( stderr, "HOME not set\n" );
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
         return;
     }
 
@@ -240,7 +252,7 @@ void edit_zshrc() {
 void view_zshrc() {
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
-        fprintf( stderr, "HOME not set\n" );
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
         return;
     }
 
@@ -290,7 +302,7 @@ void gitstat( const char* username ) {
 void script_edit( const char* name ) {
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
-        fprintf( stderr, "HOME not set\n" );
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
         return;
     }
 
@@ -298,7 +310,7 @@ void script_edit( const char* name ) {
     snprintf( path, sizeof( path ), "%s/my scripts/%s.sh", homeDir, name );
 
     if ( access( path, F_OK ) == -1 ) {
-        fprintf( stderr, "Script '%s.sh' not found in ~/my scripts\n", name );
+        fprintf( stderr, "%s Script '%s.sh' not found in ~/my scripts\n", FLAG_ERR, name );
         return;
     }
 
@@ -311,7 +323,7 @@ void script_edit( const char* name ) {
 void script_delete( const char* name ) {
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
-        fprintf( stderr, "HOME not set\n" );
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
         return;
     }
 
@@ -319,9 +331,9 @@ void script_delete( const char* name ) {
     snprintf( path, sizeof( path ), "%s/my scripts/%s.sh", homeDir, name );
 
     if ( unlink( path ) == 0 ) {
-        printf( "Script '%s.sh' deleted from ~/my scripts\n", name );
+        printf( "Script '%s.sh' deleted from ~/my scripts\n", FLAG_OK, name );
     } else {
-        perror( "Can't delete script" );
+        fprintf( stderr, "%s Can't delete script", FLAG_ERR );
     }
 }
 
@@ -329,7 +341,7 @@ void script_delete( const char* name ) {
 void script_list() {
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
-        fprintf( stderr, "HOME not set\n" );
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
         return;
     }
 
@@ -338,7 +350,7 @@ void script_list() {
 
     DIR* dir = opendir( path );
     if ( !dir ) {
-        perror( "Can't open ~/my scripts" );
+        fprintf( stderr, "%s Can't open ~/my scripts", FLAG_ERR );
         return;
     }
 
@@ -353,12 +365,11 @@ void script_list() {
     closedir( dir );
 }
 
-
 // Create user script
 void script_create( const char* name, const char* scriptPath ) {
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
-        fprintf( stderr, "HOME not set\n" );
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
         return;
     }
 
@@ -375,13 +386,13 @@ void script_create( const char* name, const char* scriptPath ) {
 
     FILE* src = fopen( scriptPath, "r" );
     if ( !src ) {
-        perror( "Can't open source script" );
+        fprintf( stderr, "%s Can't open source script", FLAG_ERR );
         return;
     }
 
     FILE* dest = fopen( destPath, "w" );
     if ( !dest ) {
-        perror( "Can't create script in my scripts" );
+        fprintf( stderr, "%s Can't create script", FLAG_ERR );
         fclose( src );
         return;
     }
@@ -396,15 +407,61 @@ void script_create( const char* name, const char* scriptPath ) {
     fclose( dest );
     chmod( destPath, 0755 );
 
-    printf( "Script '%s.sh' created in ~/my scripts\n", name );
+    printf( "%s Script '%s.sh' created in ~/my scripts\n", FLAG_OK, RESET, name );
 }
 
+// Create empty user script using nano
+void script_empty_create( const char* name ) {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
+        return;
+    }
+
+    char targetDir[1024];
+    snprintf( targetDir, sizeof( targetDir ), "%s/my scripts", homeDir );
+
+    struct stat st = {0};
+    if ( stat( targetDir, &st ) == -1 ) {
+        if ( mkdir( targetDir, 0700 ) == -1 ) {
+            fprintf( stderr, "%s Can't create ~/my scripts directory", FLAG_ERR );
+            return;
+        }
+    }
+
+    char scriptPath[1024];
+    snprintf( scriptPath, sizeof( scriptPath ), "%s/%s.sh", targetDir, name );
+
+    if ( access( scriptPath, F_OK ) == 0 ) {
+        fprintf( stderr, "%s Script '%s.sh' already exists in ~/my scripts\n", FLAG_ERR, name );
+        return;
+    }
+
+    FILE* file = fopen( scriptPath, "w" );
+    if ( !file ) {
+        fprintf( stderr, "%s Can't create script file", FLAG_ERR );
+        return;
+    }
+    fprintf( file, "#!/bin/bash\n\n" );
+    fclose( file );
+
+    if ( chmod( scriptPath, 0755 ) == -1 ) {
+        fprintf( stderr, "%s Can't make script executable", FLAG_ERR );
+        return;
+    }
+
+    printf( "%s Script '%s.sh' created in ~/my scripts\n", FLAG_OK, RESET, name );
+
+    char cmd[2048];
+    snprintf( cmd, sizeof( cmd ), "nano \"%s\"", scriptPath );
+    system( cmd );
+}
 
 
 // Main Function
 int main( int argc, char* argv[] ) {
     if ( argc < 2 ) {
-        fprintf( stderr, "Lupi Zsh Addons v0.4\nUse:\n"
+        fprintf( stderr, "%s Lupi Zsh Addons v0.4.2\nUse:\n"
             "  Default commands:\n"
             "   help - the command list\n"
             "   cache - the terminal cache size and clean it\n"
@@ -437,7 +494,7 @@ int main( int argc, char* argv[] ) {
             "       7, 8, 9, 10, 11, 12 }\n"
             "\n"
             "  Git commands:\n"
-            "   gitstat [username] - github statistic of any user\n" );
+            "   gitstat [username] - github statistic of any user\n", FLAG_WARN );
         return 1;
     }
 
@@ -452,36 +509,40 @@ int main( int argc, char* argv[] ) {
                 if ( argc == 4 ) {
                     script_edit( argv[3] );
                 } else {
-                    fprintf( stderr, "Usage: script [option] [script name]\n"
+                    fprintf( stderr, "%s Usage: script [option] [script name]\n"
                     "     Options:\n"
                     "      edit - edit your script using nano\n"
-                    "      delete - remove your script\n" );
+                    "      delete - remove your script\n", FLAG_WARN );
                 }
             } else if ( strcmp( argv[2], "delete" ) == 0 ) {
                 if ( argc == 4 ) {
                     script_delete( argv[3] );
                 } else {
-                    fprintf( stderr, "Usage: script [option] [script name]\n"
+                    fprintf( stderr, "%s Usage: script [option] [script name]\n"
                     "     Options:\n"
                     "      edit - edit your script using nano\n"
-                    "      delete - remove your script\n" );
+                    "      delete - remove your script\n", FLAG_WARN );
                 }
             } else if ( strcmp( argv[2], "create" ) == 0 ) {
                 if ( argc == 5 ) {
                     script_create( argv[3], argv[4] );
+                } else if ( argc == 4 ) {
+                    script_empty_create( argv[3] );
                 } else {
-                    fprintf( stderr, "Usage: script create [script name] [.sh file path]\n"
+                    fprintf( stderr, "%s Usage: script create [script name] [.sh file path]\n"
                     "     - сreates a command that executes your script\n"
-                    "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n" );
+                    "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n",
+                    FLAG_WARN );
                 }
             } else if ( strcmp( argv[2], "list" ) == 0 ) {
                 script_list();
             } else {
-                fprintf( stderr, "Usage: script create [script name] [.sh file path]\n"
+                fprintf( stderr, "%s Usage: script create [script name] [.sh file path]\n"
                 "     - сreates a command that executes your script\n"
-                "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n" );
+                "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/blob/main/README.md for more)\n",
+                FLAG_WARN );
             }
-        } else { fprintf( stderr, "Not enough arguments! Use 'help'\n" ); }
+        } else { fprintf( stderr, "%s Not enough arguments! Use 'help'\n", FLAG_ERR ); }
 
     } else if ( strcmp( cmd, "rc" ) == 0 ) {
         if ( argc == 3 ) {
@@ -490,16 +551,16 @@ int main( int argc, char* argv[] ) {
             } else if ( strcmp( argv[2], "edit" ) == 0 ) {
                 edit_zshrc();
             } else {
-                fprintf( stderr, "Usage: lupi rc [option] \n"
+                fprintf( stderr, "%s Usage: lupi rc [option] \n"
                 "  Options:\n"
                 "   view - show .zshrc contents\n"
-                "   edit - edit .zshrc using nano\n" );
+                "   edit - edit .zshrc using nano\n", FLAG_WARN );
             }
         } else {
-            fprintf( stderr, "Usage: lupi rc [option] \n"
+            fprintf( stderr, "%s Usage: lupi rc [option] \n"
                 "  Options:\n"
                 "   view - show .zshrc contents\n"
-                "   edit - edit .zshrc using nano\n" );
+                "   edit - edit .zshrc using nano\n", FLAG_WARN );
         }
 
     } else if ( strcmp( cmd, "cal" ) == 0 ) {
@@ -507,7 +568,7 @@ int main( int argc, char* argv[] ) {
         if ( argc == 3 ) { // if programm got 3 arguments (return selected month)
             monthOverride = month_from_string( argv[2] );
             if ( monthOverride == 0 ) { 
-                fprintf( stderr, "Invalid month: %s\n", argv[2] );
+                fprintf( stderr, "%s Invalid month: %s\n", FLAG_ERR, argv[2] );
                 return 1;
             }
         }
@@ -517,7 +578,7 @@ int main( int argc, char* argv[] ) {
         if ( argc == 3 ) {
             gitstat( argv[2] );
         } else {
-            fprintf( stderr, "Usage: gitstat [username]\n" );
+            fprintf( stderr, "%s Usage: gitstat [username]\n", FLAG_WARN );
         }
 
     } else if ( strcmp( cmd, "new" ) == 0 ) {
@@ -529,7 +590,7 @@ int main( int argc, char* argv[] ) {
     } else if ( strcmp( cmd, "hist" ) == 0 ) {
         const char* home_dir = getenv( "HOME" );
         if ( home_dir == NULL ) {
-            fprintf( stderr, "Can't find HOME user path\n" );
+            fprintf( stderr, "%s Can't find HOME user path\n", FLAG_ERR );
             return 1;
         }
 
@@ -538,7 +599,7 @@ int main( int argc, char* argv[] ) {
 
         FILE* file = fopen( filepath, "r" );
         if ( file == NULL ) {
-            perror( "Can't find .zsh_history file" );
+            fprintf( stderr, "%s Can't find .zsh_history file", FLAG_ERR );
             return 1;
         }
         fclose( file );
@@ -549,7 +610,7 @@ int main( int argc, char* argv[] ) {
     } else if ( strcmp( cmd, "cache" ) == 0 ) {
         const char* homeDir = getenv( "HOME" );
         if ( homeDir == NULL ) {
-            fprintf( stderr, "Can't find HOME user path\n" );
+            fprintf( stderr, "%s Can't find HOME user path\n", FLAG_ERR );
             return 1;
         }
 
@@ -558,13 +619,13 @@ int main( int argc, char* argv[] ) {
 
         struct stat statbuf;
         if ( stat( sessionsDir, &statbuf ) == -1 || !S_ISDIR( statbuf.st_mode )) {
-            fprintf( stderr, "Can't find .zsh_sessions folder\n" );
+            fprintf( stderr, "%s Can't find .zsh_sessions folder\n", FLAG_ERR );
             return 1;
         }
 
         long dirSize = calculate_directory_size( sessionsDir );
         if ( dirSize == -1 ) {
-            fprintf( stderr, "Can't calculate size of .zsh_sessions\n" );
+            fprintf( stderr, "%s Can't calculate size of .zsh_sessions\n", FLAG_ERR );
             return 1;
         }
 
@@ -577,22 +638,22 @@ int main( int argc, char* argv[] ) {
         }
 
         long totalCacheSize = dirSize + zshHistorySize;
-        printf( "Cache size: %ld bytes\n", totalCacheSize );
+        printf( "%s Cache size: %ld bytes\n", FLAG_WARN, totalCacheSize );
 
-        printf( "Clean cache? (y/n): " );
+        printf( "%s Clean cache? (y/n): ", FLAG_INFO, RESET );
         char response;
         scanf( " %c", &response );
 
         if ( response == 'y' || response == 'Y' ) {
             clear_directory( sessionsDir );
             clear_zsh_history( homeDir );
-            printf( "Cache cleaned\n" );
+            printf( "%s Cache cleaned\n", FLAG_OK, RESET );
         } else {
             printf( "Clean cancelled\n" );
         }
 
     } else if ( strcmp( cmd, "help" ) == 0 ) {
-        fprintf( stderr, "Use:\n"
+        fprintf( stderr, "%s Use:\n"
             "  Default commands:\n"
             "   help - the command list\n"
             "   cache - the terminal cache size and clean it\n"
@@ -650,7 +711,7 @@ int main( int argc, char* argv[] ) {
             }
         }
 
-        fprintf( stderr, "Unknown argument '%s'. Use 'help' to see the command list\n", cmd );
+        fprintf( stderr, "%s Unknown argument '%s'. Use 'help' to see the command list\n", FLAG_ERR, cmd );
         return 1;
     }
 
