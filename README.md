@@ -1,7 +1,7 @@
 # Lupi Zsh Addons
 ## Simple addons for your zsh terminal
 
-> ## Install on macOs
+> ## Install on macOS
 
 ```bash
 git clone https://github.com/0netervezer0/Lupi-Zsh-Addons
