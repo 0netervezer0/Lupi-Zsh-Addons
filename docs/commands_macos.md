@@ -1,0 +1,23 @@
+# Lupi Zsh Addons
+> ## Usage on macOS
+### Default commands
+| Command | Description |
+| ------------- | ------------- |
+| help | Returns the command list |
+| cache  | Returns the terminal cache size and asks for clean it |
+| new | Starts a new terminal session |
+| newc | Starts a new terminal session in current directory |
+| space | Returns disk usage of home direactory |
+### Environment commands
+| Command | Description |
+| ------------- | ------------- |
+| rc view | Returns .zshrc file information |
+| rc edit | Edit .zshrc file using nano |
+### Script commands
+| Command | Description |
+| ------------- | ------------- |
+| script create [name] [.sh file] | Сreates a script in "my scripts" folderthat can be used by `lupi [name]` and execute actions from the .sh file |
+| script create [name] | Creates an empty script in "my scripts" folderthat can be used by `lupi [name]` |
+| script edit [name] | Edit your script using nano |
+| script delete [name ] | Delete selected script |
+| script list | Returns a list of your scipts |
