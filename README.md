@@ -9,6 +9,14 @@ cd Lupi-Zsh-Addons
 chmod u+x lupi
 sudo mv lupi /usr/local/bin/
 ```
+> ## Install on Linux
+
+```bash
+git clone https://github.com/0netervezer0/Lupi-Zsh-Addons
+cd Lupi-Zsh-Addons
+chmod u+x lupi
+sudo mv lupi /usr/local/bin/
+```
 Ready! Now use it with command ```lupi```
 
 You can delete Lupi-Zsh-Addons folder (repository folder) after installation.
