@@ -12,5 +12,5 @@ sudo mv lupi /usr/local/bin/
 Ready! Now use it with command ```lupi```
 
 You can delete Lupi-Zsh-Addons folder (repository folder) after installation.
-> ## [Usage on macOS](docs/commands_macos.md)
-> ## [Usage on Linux](docs/commands_linux.md)
+> ### [Usage on macOS](docs/commands_macos.md)
+> ### [Usage on Linux](docs/commands_linux.md)
