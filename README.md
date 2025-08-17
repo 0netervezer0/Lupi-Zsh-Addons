@@ -13,7 +13,7 @@ sudo mv lupi /usr/local/bin/
 
 ```bash
 git clone https://github.com/0netervezer0/Lupi-Zsh-Addons
-cd Lupi-Zsh-Addons/linux/exec
+cd Lupi-Zsh-Addons/linux/exec/
 chmod u+x lupi
 sudo mv lupi /usr/local/bin/
 ```
