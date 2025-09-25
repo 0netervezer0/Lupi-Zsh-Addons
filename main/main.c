@@ -1,6 +1,5 @@
 // Lupi Zsh Addons V0.5
 // * Main File * //
-// TODO: Fix get_os_type()
 
 #include "functions.h"
 
