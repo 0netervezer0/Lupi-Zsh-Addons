@@ -1,4 +1,4 @@
-// Lupi Zsh Addons V0.5
+// Lupi Zsh Addons v1.1
 // * Function Description File * //
 
 #include <stdio.h>

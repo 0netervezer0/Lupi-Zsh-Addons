@@ -1,4 +1,4 @@
-// Lupi Zsh Addons V0.5
+// Lupi Zsh Addons v1.1
 // * Main File * //
 
 #include "functions.h"
@@ -32,7 +32,7 @@ int main( int argc, char* argv[] ) {
 
     if ( argc < 2 ) {
         if ( get_os_type() == 9 ) {
-            fprintf( stderr, "%s Lupi Zsh Addons v0.4.2\nUse:\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
                 "  Default commands:\n"
                 "   help - the command list\n"
                 "   cache - the terminal cache size and clean it\n"
@@ -56,7 +56,7 @@ int main( int argc, char* argv[] ) {
                 "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n", FLAG_WARN );
             return 1;
         } else {
-            fprintf( stderr, "%s Lupi Zsh Addons v0.4.2\nUse:\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
                 "  Default commands:\n"
                 "   help - the command list\n"
                 "   cache - the terminal cache size and clean it\n"
@@ -254,7 +254,7 @@ int main( int argc, char* argv[] ) {
 
     } else if ( strcmp( cmd, "help" ) == 0 ) {
         if ( get_os_type() == 9 ) {
-            fprintf( stderr, "%s Lupi Zsh Addons v0.4.2\nUse:\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
                 "  Default commands:\n"
                 "   help - the command list\n"
                 "   cache - the terminal cache size and clean it\n"
@@ -277,7 +277,7 @@ int main( int argc, char* argv[] ) {
                 "      - сreates a command that executes your script\n"
                 "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n", FLAG_WARN );
         } else {
-            fprintf( stderr, "%s Lupi Zsh Addons v0.4.2\nUse:\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
                 "  Default commands:\n"
                 "   help - the command list\n"
                 "   cache - the terminal cache size and clean it\n"
