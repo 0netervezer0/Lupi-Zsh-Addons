@@ -14,9 +14,10 @@
 ### Script commands
 | Command | Description |
 | ------------- | ------------- |
-| script create [name] [.sh file] | Сreates a script in "my scripts" folderthat can be used by `lupi [name]` and execute actions from the .sh file |
-| script create [name] | Creates an empty script in "my scripts" folderthat can be used by `lupi [name]` |
+| script create [name] [.sh file] | Сreates a script in "my scripts" folder. Can be used by `lupi [name]` and execute actions from the .sh file |
+| script create [name] | Creates an empty script in "my scripts" folder. Can be used by `lupi [name]` |
 | script edit [name] | Edit your script using nano |
 | script delete [name ] | Delete selected script |
 | script list | Returns a list of your scipts |
+
 
