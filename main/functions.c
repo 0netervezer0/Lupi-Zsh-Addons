@@ -321,8 +321,8 @@ void script_edit( const char* name ) {
     system( cmd );
 }
 
-// Delete user script
-void script_delete( const char* name ) {
+// Remove user script
+void script_remove( const char* name ) {
     const char* homeDir = getenv( "HOME" );
     if ( !homeDir ) {
         fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
@@ -333,9 +333,9 @@ void script_delete( const char* name ) {
     snprintf( path, sizeof( path ), "%s/my scripts/%s.sh", homeDir, name );
 
     if ( unlink( path ) == 0 ) {
-        printf( "%s Script '%s.sh' deleted from ~/my scripts\n", FLAG_OK, name );
+        printf( "%s Script '%s.sh' removed from ~/my scripts\n", FLAG_OK, name );
     } else {
-        fprintf( stderr, "%s Can't delete script\n", FLAG_ERR );
+        fprintf( stderr, "%s Can't remove script\n", FLAG_ERR );
     }
 }
 

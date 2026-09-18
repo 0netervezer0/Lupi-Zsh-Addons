@@ -49,7 +49,7 @@ int main( int argc, char* argv[] ) {
                 "   Usage: script [option] [script name]\n"
                 "     Options:\n"
                 "      edit [script name] - edit your script using nano\n"
-                "      delete [script name] - remove your script\n"
+                "      remove [script name] - remove your script\n"
                 "      list - return a list of your scripts\n"
                 "     Usage: script create [script name] [.sh file path]\n"
                 "      - сreates a command that executes your script\n"
@@ -71,7 +71,7 @@ int main( int argc, char* argv[] ) {
                 "   Usage: script [option] [script name]\n"
                 "     Options:\n"
                 "      edit [script name] - edit your script using nano\n"
-                "      delete [script name] - remove your script\n"
+                "      remove [script name] - remove your script\n"
                 "      list - return a list of your scripts\n"
                 "     Usage: script create [script name] [.sh file path]\n"
                 "      - сreates a command that executes your script\n"
@@ -95,16 +95,16 @@ int main( int argc, char* argv[] ) {
                     fprintf( stderr, "%s Usage: script [option] [script name]\n"
                     "     Options:\n"
                     "      edit - edit your script using nano\n"
-                    "      delete - remove your script\n", FLAG_WARN );
+                    "      remove - remove your script\n", FLAG_WARN );
                 }
-            } else if ( strcmp( argv[2], "delete" ) == 0 ) {
+            } else if ( strcmp( argv[2], "remove" ) == 0 ) {
                 if ( argc == 4 ) {
-                    script_delete( argv[3] );
+                    script_remove( argv[3] );
                 } else {
                     fprintf( stderr, "%s Usage: script [option] [script name]\n"
                     "     Options:\n"
                     "      edit - edit your script using nano\n"
-                    "      delete - remove your script\n", FLAG_WARN );
+                    "      remove  - remove your script\n", FLAG_WARN );
                 }
             } else if ( strcmp( argv[2], "create" ) == 0 ) {
                 if ( argc == 5 ) {
