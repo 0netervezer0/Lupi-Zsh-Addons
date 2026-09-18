@@ -34,8 +34,9 @@ void edit_zshrc();
 void script_create( const char* name, const char* scriptPath );
 void script_create_empty( const char* name );
 void script_edit( const char* name );
-void script_delete( const char* name );
+void script_remove( const char* name );
 void script_list();
+int execute_script_with_arguments( const char* scriptPath, int argCount, char* const args[] );
 
 
 #endif

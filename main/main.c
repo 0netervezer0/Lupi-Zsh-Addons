@@ -306,19 +306,10 @@ int main( int argc, char* argv[] ) {
             char scriptPath[1024];
             snprintf( scriptPath, sizeof( scriptPath ), "%s/my scripts/%s.sh", homeDir, cmd );
 
-            if ( access( scriptPath, X_OK ) == 0 ) {
-                char fullCmd[2048] = { 0 };
-                strcat( fullCmd, "\"" );
-                strcat( fullCmd, scriptPath );
-                strcat( fullCmd, "\"" );
-                // Append additional arguments if any
-                for ( int i = 2; i < argc; ++i ) {
-                    strcat( fullCmd, " \"" );
-                    strcat( fullCmd, argv[i] );
-                    strcat( fullCmd, "\"" );
-                }
-                system( fullCmd );
-                return 0;
+            if ( access( scriptPath, F_OK ) == 0 ) {
+                int scriptArgCount = argc - 2;
+                int exitCode = execute_script_with_arguments( scriptPath, scriptArgCount, &argv[2] );
+                return exitCode == 0 ? 0 : 1;
             }
         }
 

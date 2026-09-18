@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <time.h>
+#include <ctype.h>
 
 #define RED     "\033[1;31m"
 #define GREEN   "\033[1;32m"
@@ -124,6 +125,228 @@ void clear_zsh_history( const char* homeDir ) {
     } else {
         fprintf( stderr, "%s Can't clear .zsh_history", FLAG_ERR );
     }
+}
+
+static void write_script_template( const char* path ) {
+    FILE* file = fopen( path, "w" );
+    if ( file == NULL ) {
+        fprintf( stderr, "%s Can't create script template\n", FLAG_ERR );
+        return;
+    }
+
+    fprintf( file,
+        "#!/bin/bash\n\n"
+        "# Lupi script template\n"
+        "# Usage: lupi <script-name> <arg0> <arg1> ...\n"
+        "# Example: lupi myscript $arg0$ $arg1$\n"
+        "# Replace $arg0$, $arg1$, ... with the values you pass to lupi.\n"
+        "# Example command: python3 blackbird --username $arg0$\n\n"
+    );
+
+    fclose( file );
+    chmod( path, 0755 );
+}
+
+static int get_script_placeholder_index( const char* text, const char** next ) {
+    if ( strncmp( text, "$arg", 4 ) != 0 ) {
+        return -1;
+    }
+
+    const char* digits = text + 4;
+    if ( *digits == '\0' || !isdigit( (unsigned char)*digits ) ) {
+        return -1;
+    }
+
+    const char* cursor = digits;
+    while ( *cursor != '\0' && isdigit( (unsigned char)*cursor ) ) {
+        cursor++;
+    }
+
+    if ( *cursor != '$' ) {
+        return -1;
+    }
+
+    if ( next != NULL ) {
+        *next = cursor + 1;
+    }
+
+    return atoi( digits );
+}
+
+static int should_ignore_placeholder( const char* placeholderPos, const char* content ) {
+    const char* lineStart = placeholderPos;
+    while ( lineStart > content && lineStart[-1] != '\n' && lineStart[-1] != '\r' ) {
+        lineStart--;
+    }
+
+    const char* cursor = lineStart;
+    while ( *cursor == ' ' || *cursor == '\t' ) {
+        cursor++;
+    }
+
+    return *cursor == '#';
+}
+
+static int count_script_placeholders( const char* content ) {
+    int expected = 0;
+    const char* cursor = content;
+
+    while ( *cursor != '\0' ) {
+        const char* next = NULL;
+        int index = get_script_placeholder_index( cursor, &next );
+        if ( index >= 0 ) {
+            if ( !should_ignore_placeholder( cursor, content ) ) {
+                if ( index + 1 > expected ) {
+                    expected = index + 1;
+                }
+            }
+            cursor = next;
+        } else {
+            cursor++;
+        }
+    }
+
+    return expected;
+}
+
+static char* shell_escape_argument( const char* value ) {
+    size_t length = strlen( value );
+    char* escaped = malloc( length * 4 + 3 );
+    if ( escaped == NULL ) {
+        return NULL;
+    }
+
+    size_t pos = 0;
+    escaped[pos++] = '\'';
+
+    for ( size_t i = 0; i < length; ++i ) {
+        if ( value[i] == '\'' ) {
+            escaped[pos++] = '\'';
+            escaped[pos++] = '\\';
+            escaped[pos++] = '\'';
+            escaped[pos++] = '\'';
+        } else {
+            escaped[pos++] = value[i];
+        }
+    }
+
+    escaped[pos++] = '\'';
+    escaped[pos] = '\0';
+    return escaped;
+}
+
+int execute_script_with_arguments( const char* scriptPath, int argCount, char* const args[] ) {
+    FILE* file = fopen( scriptPath, "r" );
+    if ( file == NULL ) {
+        fprintf( stderr, "%s Can't open script '%s'\n", FLAG_ERR, scriptPath );
+        return 1;
+    }
+
+    fseek( file, 0, SEEK_END );
+    long fileSize = ftell( file );
+    if ( fileSize < 0 ) {
+        fclose( file );
+        fprintf( stderr, "%s Can't read script '%s'\n", FLAG_ERR, scriptPath );
+        return 1;
+    }
+    rewind( file );
+
+    char* content = malloc( (size_t)fileSize + 1 );
+    if ( content == NULL ) {
+        fclose( file );
+        fprintf( stderr, "%s Can't allocate memory for script '%s'\n", FLAG_ERR, scriptPath );
+        return 1;
+    }
+
+    size_t readCount = fread( content, 1, (size_t)fileSize, file );
+    fclose( file );
+    content[readCount] = '\0';
+
+    int expectedArgs = count_script_placeholders( content );
+    if ( argCount != expectedArgs ) {
+        fprintf( stderr, "%s Script '%s' expects %d argument(s), but %d were passed\n",
+            FLAG_ERR, scriptPath, expectedArgs, argCount );
+        free( content );
+        return 1;
+    }
+
+    char* processed = malloc( strlen( content ) * 4 + 1 );
+    if ( processed == NULL ) {
+        free( content );
+        fprintf( stderr, "%s Can't allocate memory for script processing\n", FLAG_ERR );
+        return 1;
+    }
+
+    size_t processedLen = 0;
+    const char* cursor = content;
+    while ( *cursor != '\0' ) {
+        const char* next = NULL;
+        int index = get_script_placeholder_index( cursor, &next );
+        if ( index >= 0 ) {
+            if ( should_ignore_placeholder( cursor, content ) ) {
+                while ( cursor < next ) {
+                    processed[processedLen++] = *cursor;
+                    cursor++;
+                }
+                continue;
+            }
+
+            if ( index >= argCount ) {
+                fprintf( stderr, "%s Placeholder $arg%d$ used but no argument was provided\n", FLAG_ERR, index );
+                free( processed );
+                free( content );
+                return 1;
+            }
+
+            char* escaped = shell_escape_argument( args[index] );
+            if ( escaped == NULL ) {
+                free( processed );
+                free( content );
+                fprintf( stderr, "%s Can't prepare script arguments\n", FLAG_ERR );
+                return 1;
+            }
+
+            size_t escapedLen = strlen( escaped );
+            memcpy( processed + processedLen, escaped, escapedLen );
+            processedLen += escapedLen;
+            free( escaped );
+            cursor = next;
+        } else {
+            processed[processedLen++] = *cursor;
+            cursor++;
+        }
+    }
+    processed[processedLen] = '\0';
+    free( content );
+
+    char tempPath[] = "/tmp/lupi-script-XXXXXX.sh";
+    int fd = mkstemp( tempPath );
+    if ( fd == -1 ) {
+        free( processed );
+        fprintf( stderr, "%s Can't create temporary script\n", FLAG_ERR );
+        return 1;
+    }
+
+    FILE* tempFile = fdopen( fd, "w" );
+    if ( tempFile == NULL ) {
+        close( fd );
+        unlink( tempPath );
+        free( processed );
+        fprintf( stderr, "%s Can't write temporary script\n", FLAG_ERR );
+        return 1;
+    }
+
+    fwrite( processed, 1, processedLen, tempFile );
+    fclose( tempFile );
+    chmod( tempPath, 0700 );
+
+    char command[4096];
+    snprintf( command, sizeof( command ), "bash \"%s\"", tempPath );
+    int exitCode = system( command );
+    unlink( tempPath );
+    free( processed );
+
+    return exitCode;
 }
 
 // ! ----------------------------------------------
@@ -250,7 +473,7 @@ void script_create( const char* name, const char* scriptPath ) {
     fclose( dest );
     chmod( destPath, 0755 );
 
-    printf( "%s Script '%s.sh' created in ~/my scripts\n", FLAG_OK, RESET, name );
+    printf( "%s Script '%s.sh' created in ~/my scripts\n", FLAG_OK, name );
 }
 
 // Create empty user script using nano
@@ -280,18 +503,7 @@ void script_create_empty( const char* name ) {
         return;
     }
 
-    FILE* file = fopen( scriptPath, "w" );
-    if ( !file ) {
-        fprintf( stderr, "%s Can't create script file\n", FLAG_ERR );
-        return;
-    }
-    fprintf( file, "#!/bin/bash\n\n" );
-    fclose( file );
-
-    if ( chmod( scriptPath, 0755 ) == -1 ) {
-        fprintf( stderr, "%s Can't make script executable\n", FLAG_ERR );
-        return;
-    }
+    write_script_template( scriptPath );
 
     printf( "%s Script '%s.sh' created in ~/my scripts\n", FLAG_OK,  name );
 
@@ -314,6 +526,17 @@ void script_edit( const char* name ) {
     if ( access( path, F_OK ) == -1 ) {
         fprintf( stderr, "%s Script '%s.sh' not found in ~/my scripts\n", FLAG_ERR, name );
         return;
+    }
+
+    FILE* file = fopen( path, "r" );
+    if ( file != NULL ) {
+        fseek( file, 0, SEEK_END );
+        long fileSize = ftell( file );
+        fclose( file );
+
+        if ( fileSize == 0 ) {
+            write_script_template( path );
+        }
     }
 
     char cmd[2048];
