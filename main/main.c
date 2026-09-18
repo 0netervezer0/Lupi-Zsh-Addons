@@ -1,4 +1,4 @@
-// Lupi Zsh Addons v1.1
+// Lupi Zsh Addons v1.2
 // * Main File * //
 
 #include "functions.h"
@@ -49,6 +49,7 @@ int main( int argc, char* argv[] ) {
                 "   Usage: script [option] [script name]\n"
                 "     Options:\n"
                 "      edit [script name] - edit your script using nano\n"
+                "      rename [old script name] [new script name] - rename your script\n"
                 "      remove [script name] - remove your script\n"
                 "      list - return a list of your scripts\n"
                 "     Usage: script create [script name] [.sh file path]\n"
@@ -71,6 +72,7 @@ int main( int argc, char* argv[] ) {
                 "   Usage: script [option] [script name]\n"
                 "     Options:\n"
                 "      edit [script name] - edit your script using nano\n"
+                "      rename [old script name] [new script name] - rename your script\n"
                 "      remove [script name] - remove your script\n"
                 "      list - return a list of your scripts\n"
                 "     Usage: script create [script name] [.sh file path]\n"
@@ -95,7 +97,15 @@ int main( int argc, char* argv[] ) {
                     fprintf( stderr, "%s Usage: script [option] [script name]\n"
                     "     Options:\n"
                     "      edit - edit your script using nano\n"
+                    "      rename - rename your script\n"
                     "      remove - remove your script\n", FLAG_WARN );
+                }
+            } else if ( strcmp( argv[2], "rename" ) == 0 ) {
+                if ( argc == 5 ) {
+                    script_rename( argv[3], argv[4] );
+                } else {
+                    fprintf( stderr, "%s Usage: script rename [old script name] [new script name]\n"
+                    "      - rename your script in ~/my scripts\n", FLAG_WARN );
                 }
             } else if ( strcmp( argv[2], "remove" ) == 0 ) {
                 if ( argc == 4 ) {
@@ -104,6 +114,7 @@ int main( int argc, char* argv[] ) {
                     fprintf( stderr, "%s Usage: script [option] [script name]\n"
                     "     Options:\n"
                     "      edit - edit your script using nano\n"
+                    "      rename - rename your script\n"
                     "      remove  - remove your script\n", FLAG_WARN );
                 }
             } else if ( strcmp( argv[2], "create" ) == 0 ) {
@@ -271,6 +282,7 @@ int main( int argc, char* argv[] ) {
                 "   Usage: script [option] [script name]\n"
                 "     Options:\n"
                 "      edit [script name] - edit your script using nano\n"
+                "      rename [old script name] [new script name] - rename your script\n"
                 "      delete [script name] - remove your script\n"
                 "      list - return a list of your scripts\n"
                 "     Usage: script create [script name] [.sh file path]\n"
@@ -292,6 +304,7 @@ int main( int argc, char* argv[] ) {
                 "   Usage: script [option] [script name]\n"
                 "     Options:\n"
                 "      edit [script name] - edit your script using nano\n"
+                "      rename [old script name] [new script name] - rename your script\n"
                 "      delete [script name] - remove your script\n"
                 "      list - return a list of your scripts\n"
                 "     Usage: script create [script name] [.sh file path]\n"

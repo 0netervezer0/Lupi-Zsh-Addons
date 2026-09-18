@@ -1,4 +1,4 @@
-// Lupi Zsh Addons v1.1
+// Lupi Zsh Addons v1.2
 // * Function Header File * //
 
 #ifndef FUNCTIONS_H
@@ -34,6 +34,7 @@ void edit_zshrc();
 void script_create( const char* name, const char* scriptPath );
 void script_create_empty( const char* name );
 void script_edit( const char* name );
+void script_rename( const char* oldName, const char* newName );
 void script_remove( const char* name );
 void script_list();
 int execute_script_with_arguments( const char* scriptPath, int argCount, char* const args[] );

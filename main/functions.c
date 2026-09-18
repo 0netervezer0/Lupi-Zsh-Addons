@@ -1,4 +1,4 @@
-// Lupi Zsh Addons v1.1
+// Lupi Zsh Addons v1.2
 // * Function Description File * //
 
 #include <stdio.h>
@@ -542,6 +542,42 @@ void script_edit( const char* name ) {
     char cmd[2048];
     snprintf( cmd, sizeof( cmd ), "nano \"%s\"", path );
     system( cmd );
+}
+
+// Rename user script
+void script_rename( const char* oldName, const char* newName ) {
+    const char* homeDir = getenv( "HOME" );
+    if ( !homeDir ) {
+        fprintf( stderr, "%s HOME not set\n", FLAG_ERR );
+        return;
+    }
+
+    char oldPath[1024];
+    snprintf( oldPath, sizeof( oldPath ), "%s/my scripts/%s.sh", homeDir, oldName );
+
+    char newPath[1024];
+    snprintf( newPath, sizeof( newPath ), "%s/my scripts/%s.sh", homeDir, newName );
+
+    if ( access( oldPath, F_OK ) == -1 ) {
+        fprintf( stderr, "%s Script '%s.sh' not found in ~/my scripts\n", FLAG_ERR, oldName );
+        return;
+    }
+
+    if ( strcmp( oldName, newName ) == 0 ) {
+        fprintf( stderr, "%s New script name is the same as the old one\n", FLAG_ERR );
+        return;
+    }
+
+    if ( access( newPath, F_OK ) == 0 ) {
+        fprintf( stderr, "%s Script '%s.sh' already exists in ~/my scripts\n", FLAG_ERR, newName );
+        return;
+    }
+
+    if ( rename( oldPath, newPath ) == 0 ) {
+        printf( "%s Script '%s.sh' renamed to '%s.sh'\n", FLAG_OK, oldName, newName );
+    } else {
+        fprintf( stderr, "%s Can't rename script\n", FLAG_ERR );
+    }
 }
 
 // Remove user script
