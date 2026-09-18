@@ -25,6 +25,39 @@
 #define FLAG_OK    GREEN    "[✓]" RESET
 
 
+static const char* normalize_command( const char* value ) {
+    if ( value == NULL ) {
+        return "";
+    }
+
+    if ( strcmp( value, "-h" ) == 0 || strcmp( value, "--help" ) == 0 ) {
+        return "help";
+    }
+    if ( strcmp( value, "-v" ) == 0 || strcmp( value, "--version" ) == 0 ) {
+        return "version";
+    }
+    if ( strcmp( value, "-s" ) == 0 ) {
+        return "script";
+    }
+    if ( strcmp( value, "a" ) == 0 ) {
+        return "create";
+    }
+    if ( strcmp( value, "e" ) == 0 ) {
+        return "edit";
+    }
+    if ( strcmp( value, "rn" ) == 0 ) {
+        return "rename";
+    }
+    if ( strcmp( value, "rm" ) == 0 ) {
+        return "remove";
+    }
+    if ( strcmp( value, "ls" ) == 0 ) {
+        return "list";
+    }
+
+    return value;
+}
+
 // Main function
 int main( int argc, char* argv[] ) {
     // Chek os type
@@ -32,65 +65,66 @@ int main( int argc, char* argv[] ) {
 
     if ( argc < 2 ) {
         if ( get_os_type() == 9 ) {
-            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
-                "  Default commands:\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.2\nUse:\n"
+                "  Default tools:\n"
                 "   help - the command list\n"
                 "   cache - the terminal cache size and clean it\n"
                 "   new - start new terminal session\n"
                 "   newc - start new terminal session in current directory\n"
                 "   space - show disk usage of home directory\n"
                 "\n"
-                "  Environment commands:\n"
+                "  Environment tools:\n"
                 "   hist - the command history of your terminal\n"
                 "   Usage: rc [option] - show or edit .zshrc\n"
                 "     Options:\n"
                 "      view - show .zshrc contents\n"
                 "      edit - edit .zshrc using nano\n"
-                "   Usage: script [option] [script name]\n"
+                "   Usage: script / -s [option] [script name]\n"
                 "     Options:\n"
-                "      edit [script name] - edit your script using nano\n"
-                "      rename [old script name] [new script name] - rename your script\n"
-                "      remove [script name] - remove your script\n"
-                "      list - return a list of your scripts\n"
-                "     Usage: script create [script name] [.sh file path]\n"
-                "      - сreates a command that executes your script\n"
-                "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n", FLAG_WARN );
+                "      edit / e [script name] - edit your script using nano\n"
+                "      rename / rn [old script name] [new script name] - rename your script\n"
+                "      remove / rm [script name] - remove your script\n"
+                "      list / ls - return a list of your scripts\n"
+                "      create / a [script name] [.sh file path] - create or copy a script\n"
+                "     Aliases: -h help, -v version, -s script, a create, e edit, rn rename, rm remove, ls list\n"
+                "     Repository: https://github.com/0netervezer0/Lupi-Zsh-Addons\n", FLAG_WARN );
             return 1;
         } else {
-            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
-                "  Default commands:\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.2\nUse:\n"
+                "  Default tools:\n"
                 "   help - the command list\n"
                 "   cache - the terminal cache size and clean it\n"
                 "   space - show disk usage of home directory\n"
                 "\n"
-                "  Environment commands:\n"
+                "  Environment tools:\n"
                 "   hist - the command history of your terminal\n"
                 "   Usage: rc [option] - show or edit .zshrc\n"
                 "     Options:\n"
                 "      view - show .zshrc contents\n"
                 "      edit - edit .zshrc using nano\n"
-                "   Usage: script [option] [script name]\n"
+                "   Usage: script / -s [option] [script name]\n"
                 "     Options:\n"
-                "      edit [script name] - edit your script using nano\n"
-                "      rename [old script name] [new script name] - rename your script\n"
-                "      remove [script name] - remove your script\n"
-                "      list - return a list of your scripts\n"
-                "     Usage: script create [script name] [.sh file path]\n"
-                "      - сreates a command that executes your script\n"
-                "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n", FLAG_WARN );
+                "      edit / e [script name] - edit your script using nano\n"
+                "      rename / rn [old script name] [new script name] - rename your script\n"
+                "      remove / rm [script name] - remove your script\n"
+                "      list / ls - return a list of your scripts\n"
+                "      create / a [script name] [.sh file path] - create or copy a script\n"
+                "     Aliases: -h help, -v version, -s script, a create, e edit, rn rename, rm remove, ls list\n"
+                "     Repository: https://github.com/0netervezer0/Lupi-Zsh-Addons\n", FLAG_WARN );
             return 1;
         }
     }
 
     // commands
-    const char* cmd = argv[1];
+    const char* cmd = normalize_command( argv[1] );
+    const char* scriptCmd = argc >= 3 ? normalize_command( argv[2] ) : "";
 
     if ( strcmp( cmd, "space" ) == 0 ) {
         show_disk_space();
 
     } else if ( strcmp( cmd, "script" ) == 0 ) {
         if ( argc >= 3 ) {
-            if ( strcmp( argv[2], "edit" ) == 0 ) {
+            if ( strcmp( scriptCmd, "edit" ) == 0 ) {
                 if ( argc == 4 ) {
                     script_edit( argv[3] );
                 } else {
@@ -100,14 +134,14 @@ int main( int argc, char* argv[] ) {
                     "      rename - rename your script\n"
                     "      remove - remove your script\n", FLAG_WARN );
                 }
-            } else if ( strcmp( argv[2], "rename" ) == 0 ) {
+            } else if ( strcmp( scriptCmd, "rename" ) == 0 ) {
                 if ( argc == 5 ) {
                     script_rename( argv[3], argv[4] );
                 } else {
                     fprintf( stderr, "%s Usage: script rename [old script name] [new script name]\n"
                     "      - rename your script in ~/my scripts\n", FLAG_WARN );
                 }
-            } else if ( strcmp( argv[2], "remove" ) == 0 ) {
+            } else if ( strcmp( scriptCmd, "remove" ) == 0 ) {
                 if ( argc == 4 ) {
                     script_remove( argv[3] );
                 } else {
@@ -117,7 +151,7 @@ int main( int argc, char* argv[] ) {
                     "      rename - rename your script\n"
                     "      remove  - remove your script\n", FLAG_WARN );
                 }
-            } else if ( strcmp( argv[2], "create" ) == 0 ) {
+            } else if ( strcmp( scriptCmd, "create" ) == 0 ) {
                 if ( argc == 5 ) {
                     script_create( argv[3], argv[4] );
                 } else if ( argc == 4 ) {
@@ -128,7 +162,7 @@ int main( int argc, char* argv[] ) {
                     "       (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n",
                     FLAG_WARN );
                 }
-            } else if ( strcmp( argv[2], "list" ) == 0 ) {
+            } else if ( strcmp( scriptCmd, "list" ) == 0 ) {
                 script_list();
             } else {
                 fprintf( stderr, "%s Usage: script create [script name] [.sh file path]\n"
@@ -265,52 +299,58 @@ int main( int argc, char* argv[] ) {
 
     } else if ( strcmp( cmd, "help" ) == 0 ) {
         if ( get_os_type() == 9 ) {
-            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
-                "  Default commands:\n"
-                "   help - the command list\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.2\nUse:\n"
+                "  Default tools:\n"
+                "   help / -h - the command list\n"
+                "   version / -v - print version and repository\n"
                 "   cache - the terminal cache size and clean it\n"
                 "   new - start new terminal session\n"
                 "   newc - start new terminal session in current directory\n"
                 "   space - show disk usage of home directory\n"
                 "\n"
-                "  Environment commands:\n"
+                "  Environment tools:\n"
                 "   hist - the command history of your terminal\n"
                 "   Usage: rc [option] - show or edit .zshrc\n"
                 "     Options:\n"
                 "      view - show .zshrc contents\n"
                 "      edit - edit .zshrc using nano\n"
-                "   Usage: script [option] [script name]\n"
+                "   Usage: script / -s [option] [script name]\n"
                 "     Options:\n"
-                "      edit [script name] - edit your script using nano\n"
-                "      rename [old script name] [new script name] - rename your script\n"
-                "      delete [script name] - remove your script\n"
-                "      list - return a list of your scripts\n"
-                "     Usage: script create [script name] [.sh file path]\n"
-                "      - сreates a command that executes your script\n"
-                "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n", FLAG_WARN );
+                "      edit / e [script name] - edit your script using nano\n"
+                "      rename / rn [old script name] [new script name] - rename your script\n"
+                "      remove / rm [script name] - remove your script\n"
+                "      list / ls - return a list of your scripts\n"
+                "      create / a [script name] [.sh file path] - create or copy a script\n"
+                "     Aliases: -h help, -v version, -s script, a create, e edit, rn rename, rm remove, ls list\n"
+                "     Repository: https://github.com/0netervezer0/Lupi-Zsh-Addons\n", FLAG_WARN );
         } else {
-            fprintf( stderr, "%s Lupi Zsh Addons v1.1\nUse:\n"
-                "  Default commands:\n"
-                "   help - the command list\n"
+            fprintf( stderr, "%s Lupi Zsh Addons v1.2\nUse:\n"
+                "  Default tools:\n"
+                "   help / -h - the command list\n"
+                "   version / -v - print version and repository\n"
                 "   cache - the terminal cache size and clean it\n"
                 "   space - show disk usage of home directory\n"
                 "\n"
-                "  Environment commands:\n"
+                "  Environment tools:\n"
                 "   hist - the command history of your terminal\n"
                 "   Usage: rc [option] - show or edit .zshrc\n"
                 "     Options:\n"
                 "      view - show .zshrc contents\n"
                 "      edit - edit .zshrc using nano\n"
-                "   Usage: script [option] [script name]\n"
+                "   Usage: script / -s [option] [script name]\n"
                 "     Options:\n"
-                "      edit [script name] - edit your script using nano\n"
-                "      rename [old script name] [new script name] - rename your script\n"
-                "      delete [script name] - remove your script\n"
-                "      list - return a list of your scripts\n"
-                "     Usage: script create [script name] [.sh file path]\n"
-                "      - сreates a command that executes your script\n"
-                "        (https://github.com/0netervezer0/Lupi-Zsh-Addons/README.md for more)\n", FLAG_WARN );
+                "      edit / e [script name] - edit your script using nano\n"
+                "      rename / rn [old script name] [new script name] - rename your script\n"
+                "      remove / rm [script name] - remove your script\n"
+                "      list / ls - return a list of your scripts\n"
+                "      create / a [script name] [.sh file path] - create or copy a script\n"
+                "     Aliases: -h help, -v version, -s script, a create, e edit, rn rename, rm remove, ls list\n"
+                "     Repository: https://github.com/0netervezer0/Lupi-Zsh-Addons\n", FLAG_WARN );
         }
+
+    } else if ( strcmp( cmd, "version" ) == 0 ) {
+        printf( "%s Lupi Zsh Addons v1.2\n", FLAG_OK );
+        printf( "Repository: https://github.com/0netervezer0/Lupi-Zsh-Addons\n" );
 
     } else {
         // Try to execute user script from ~/my scripts
